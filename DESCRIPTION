@@ -1,0 +1,18 @@
+Package: PAVplotR
+Type: Package
+Title: Presence-absence variation matrix plotter
+Version: 0.1.0
+Author: Avril M. Harder
+Maintainer: Avril M. Harder <aharder@hudsonalpha.org>
+Description: Takes a haploid VCF and plots sequence PAV in the extended coordinate space of a reference haplotype.
+Encoding: UTF-8
+License: GPL-2
+LazyData: true
+RoxygenNote: 7.3.3
+Imports: 
+    dplyr,
+    ggnewscale,
+    ggplot2,
+    ggtext,
+    reshape2,
+    vcfR
