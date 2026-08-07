@@ -15,7 +15,7 @@ plot_pav_hiliteInsertions(
   region_start = NULL,
   region_end = NULL,
   bin_size = 100,
-  ins_thresh,
+  ins_thresh = 1,
   color_low = "white",
   color_high = "#0F85A0FF",
   ins_color_low = "white",
@@ -48,7 +48,7 @@ plot_pav_hiliteInsertions(
 
 \item{bin_size}{Bin size (in bases) for summarizing PAV}
 
-\item{ins_thresh}{Threshold (in bases) for the number of additional bases required in a bin, relative to the reference haplotype, to flag the bin as containing ≥1 insertion}
+\item{ins_thresh}{Threshold (in bases) for the number of additional bases required in a bin, relative to the reference haplotype, to flag the bin as containing ≥1 insertion. Default = 1}
 
 \item{color_low}{Color for absence (bin presence = 0)}
 
