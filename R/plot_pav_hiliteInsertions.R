@@ -20,6 +20,13 @@
 #' @param gene_bounds Optional BED file of gene regions to be overlaid on PAV plot. Follows typical tab-delimited BED format with 4 columns: (i) chromosome, (ii) 0-based start coordinate, (iii) end coordinate, and (iv) gene name
 #' @param gene_color If supplying gene regions, color of highlighting polygon
 #' @param hap_order Method for determining vertical order of haplotypes in plot. Options are: 'refdist' (default) = haplotypes are ordered by distance to the reference haplotype, with the reference haplotype appearing at the top of the plot and haplotype divergence increases as y decreases; 'clust' = haplotypes are clustered by using dist() and hclust(), order of clusters is arbitrary
+#' @import dplyr
+#' @import ggnewscale
+#' @import ggplot2
+#' @import ggtext
+#' @import reshape2
+#' @importFrom stats hclust dist
+#' @export
 plot_pav_hiliteInsertions <- function(presence_matrix, bin_info,
                                       ins_output_prefix, output_fmt = 'pdf', roi = NULL,
                                       ref_hap = NULL, chrom = NULL, region_start = NULL, region_end = NULL,
@@ -146,9 +153,9 @@ plot_pav_hiliteInsertions <- function(presence_matrix, bin_info,
   prop.thresh <- ins_thresh/bin_size
   for(bin in unique(df$BinNum)){
     sub.bin <- df[df$BinNum == bin,]
-    for(hap in unique(df$Sample[df$Sample != ref])){
+    for(hap in unique(df$Sample[df$Sample != ref_hap])){
       if(sub.bin[which(sub.bin$Sample == hap), 'Presence'] >=
-         (sub.bin[which(sub.bin$Sample == ref), 'Presence'] + prop.thresh)){
+         (sub.bin[which(sub.bin$Sample == ref_hap), 'Presence'] + prop.thresh)){
         df[which(df$BinNum == bin & df$Sample == hap), 'seq.type'] <- 'ins'
       }
     }

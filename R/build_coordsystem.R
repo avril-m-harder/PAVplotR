@@ -4,6 +4,7 @@
 #' @param start_pos Start position in reference coordinates (NULL for beginning)
 #' @param end_pos End position in reference coordinates (NULL for end)
 #' @return A data frame with mapping between reference and expanded coordinates
+#' @import vcfR
 #' @export
 build_coordsystem <- function(vcf, start_pos = NULL, end_pos = NULL) {
 

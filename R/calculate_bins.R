@@ -6,6 +6,7 @@
 #' @param start_pos Start position in reference coordinates
 #' @param end_pos End position in reference coordinates
 #' @return A list with presence matrix and bin information
+#' @import vcfR
 #' @export
 calculate_bins <- function(vcf, coord_map, bin_size, start_pos, end_pos) {
 
