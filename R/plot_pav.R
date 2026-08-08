@@ -154,7 +154,7 @@ plot_pav <- function(coord_map, presence_matrix, bin_info,
   }
 
   # If supplied, convert gene bounds into expanded coordinate space
-  if(exists('gene_bounds')){
+  if(!is.null('gene_bounds')){
     n1 <- length(unique(df$Sample))+1
     gene_bounds$gene.start <- gene_bounds$gene.start+1 ## convert 0-based BED to 1-based coord system used here
     filt_gene_bounds <- gene_bounds[which(gene_bounds$gene.start >= min(bin_info$ref_start[bin_info$ref_start != 0]) &
