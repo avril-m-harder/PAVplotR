@@ -6,16 +6,16 @@
 #' @return A data frame with mapping between reference and expanded coordinates
 #' @import vcfR
 #' @export
-build_coordsystem <- function(vcf_fn, start_pos = NULL, end_pos = NULL) {
+build_coordsystem <- function(vcf, start_pos = NULL, end_pos = NULL) {
 
   if(missing(vcf)){
     stop("Must specify 'vcf': a vcfR object")
   }
   if(missing(start_pos)){
-    stop("Must specify 'start_pos'")
+    stop("Must specify 'start_pos' for region to be plotted")
   }
   if(missing(end_pos)){
-    stop("Must specify 'end_pos'")
+    stop("Must specify 'end_pos' for region to be plotted")
   }
 
   # Extract positions and alleles
