@@ -26,7 +26,6 @@
 #' @import ggtext
 #' @import reshape2
 #' @importFrom stats hclust dist
-#' @export
 plot_pav_hiliteInsertions <- function(presence_matrix, bin_info,
                                       ins_output_prefix, output_fmt = 'pdf', roi = NULL,
                                       ref_hap = NULL, chrom = NULL, region_start = NULL, region_end = NULL,
