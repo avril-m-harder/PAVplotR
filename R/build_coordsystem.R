@@ -18,7 +18,7 @@ build_coordsystem <- function(vcf_fn, start_pos = NULL, end_pos = NULL) {
     stop("Must specify 'end_pos'")
   }
 
-  vcf <<- read.vcfR(vcf_fn, verbose = FALSE)
+  vcf <- read.vcfR(vcf_fn, verbose = FALSE)
 
   # Extract positions and alleles
   fix <- getFIX(vcf)
