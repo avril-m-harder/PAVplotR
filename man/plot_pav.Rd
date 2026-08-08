@@ -5,6 +5,7 @@
 \title{Plot presence-absence matrix in expanded coordinate system labeled with original reference coordinates}
 \usage{
 plot_pav(
+  coord_map,
   presence_matrix,
   bin_info,
   output_prefix,
@@ -25,9 +26,11 @@ plot_pav(
 )
 }
 \arguments{
-\item{presence_matrix}{Matrix of presence/absence proportions, calculated by calculate_bins.R}
+\item{coord_map}{Map linking expanded coordinate system to original reference coordinate system, written by build_coordsystem()}
 
-\item{bin_info}{Data frame with bin coordinate information, written by calculate_bins.R}
+\item{presence_matrix}{Matrix of presence/absence proportions, calculated by calculate_bins()}
+
+\item{bin_info}{Data frame with bin coordinate information, written by calculate_bins()}
 
 \item{output_prefix}{Output plot file prefix. Default is to substitute '-PAV.pdf' (and/or '-PAV.tiff') for '.vcf.gz' in input VCF file name.}
 

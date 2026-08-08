@@ -4,10 +4,10 @@
 \alias{build_coordsystem}
 \title{Build expanded coordinate system accounting for all alleles}
 \usage{
-build_coordsystem(vcf_fn, start_pos = NULL, end_pos = NULL)
+build_coordsystem(vcf, start_pos = NULL, end_pos = NULL)
 }
 \arguments{
-\item{vcf_fn}{A VCF file containing haploid calls, including for the reference haplotype}
+\item{vcf}{A vcfR object containing haploid calls, including for the reference haplotype}
 
 \item{start_pos}{Start position in reference coordinates (NULL for beginning)}
 
