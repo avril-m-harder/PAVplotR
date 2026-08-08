@@ -1,7 +1,8 @@
 #' Plot presence-absence matrix in expanded coordinate system labeled with original reference coordinates
 #'
-#' @param presence_matrix Matrix of presence/absence proportions, calculated by calculate_bins.R
-#' @param bin_info Data frame with bin coordinate information, written by calculate_bins.R
+#' @param coord_map Map linking expanded coordinate system to original reference coordinate system, written by build_coordsystem()
+#' @param presence_matrix Matrix of presence/absence proportions, calculated by calculate_bins()
+#' @param bin_info Data frame with bin coordinate information, written by calculate_bins()
 #' @param output_prefix Output plot file prefix. Default is to substitute '-PAV.pdf' (and/or '-PAV.tiff') for '.vcf.gz' in input VCF file name.
 #' @param output_fmt File format for output plot. Options are 'pdf' (default), 'tiff', or 'both'
 #' @param roi Name of region to be plotted
@@ -24,7 +25,7 @@
 #' @import reshape2
 #' @importFrom stats hclust dist
 #' @export
-plot_pav <- function(presence_matrix, bin_info,
+plot_pav <- function(coord_map, presence_matrix, bin_info,
                      output_prefix, output_fmt = 'pdf', roi = NULL,
                      ref_hap = NULL, chrom = NULL, region_start = NULL, region_end = NULL,
                      bin_size = 100, color_low = 'white', color_high = '#0F85A0FF',
@@ -32,6 +33,15 @@ plot_pav <- function(presence_matrix, bin_info,
                      gene_bounds = NULL, gene_color = '#EDD746FF',
                      hap_order = 'refdist') {
 
+  if(missing(coord_map)){
+    stop("Must specify 'coord_map'")
+  }
+  if(missing(presence_matrix)){
+    stop("Must specify 'presence_matrix'")
+  }
+  if(missing(bin_info)){
+    stop("Must specify 'bin_info'")
+  }
   if(missing(roi)){
     stop("Must specify 'roi'")
   }
