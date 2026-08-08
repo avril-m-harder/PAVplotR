@@ -1,6 +1,6 @@
 #' Build expanded coordinate system accounting for all alleles
 #'
-#' @param vcf_fn A VCF file containing haploid calls, including for the reference haplotype
+#' @param vcf A vcfR object containing haploid calls, including for the reference haplotype
 #' @param start_pos Start position in reference coordinates (NULL for beginning)
 #' @param end_pos End position in reference coordinates (NULL for end)
 #' @return A data frame with mapping between reference and expanded coordinates
@@ -8,8 +8,8 @@
 #' @export
 build_coordsystem <- function(vcf_fn, start_pos = NULL, end_pos = NULL) {
 
-  if(missing(vcf_fn)){
-    stop("Must specify 'vcf_fn': VCF path + file name")
+  if(missing(vcf)){
+    stop("Must specify 'vcf': a vcfR object")
   }
   if(missing(start_pos)){
     stop("Must specify 'start_pos'")
@@ -17,8 +17,6 @@ build_coordsystem <- function(vcf_fn, start_pos = NULL, end_pos = NULL) {
   if(missing(end_pos)){
     stop("Must specify 'end_pos'")
   }
-
-  vcf <- read.vcfR(vcf_fn, verbose = FALSE)
 
   # Extract positions and alleles
   fix <- getFIX(vcf)
