@@ -3,7 +3,7 @@
 #' @param coord_map Map linking expanded coordinate system to original reference coordinate system, written by build_coordsystem()
 #' @param presence_matrix Matrix of presence/absence proportions, calculated by calculate_bins()
 #' @param bin_info Data frame with bin coordinate information, written by calculate_bins()
-#' @param output_prefix Output plot file prefix. Default is to substitute '-PAV.pdf' (and/or '-PAV.tiff') for '.vcf.gz' in input VCF file name.
+#' @param output_prefix Output plot file prefix. If not set, will default to '[roi]_[ref_hap]_[chrom]_[region_start]_[region_end]_[bin_size]'
 #' @param output_fmt File format for output plot. Options are 'pdf' (default), 'tiff', or 'both'
 #' @param roi Name of region to be plotted
 #' @param ref_hap Name of reference haplotype. Should be the name of the haplotype against which variants are described (i.e., that alignments were made against to build the input VCF) and should also be included as a sample in the input VCF.
@@ -56,6 +56,9 @@ plot_pav <- function(coord_map, presence_matrix, bin_info,
   }
   if(missing(region_end)){
     stop("Must specify 'region_end'")
+  }
+  if(is.null(output_prefix)){
+    output_prefix <- paste0(roi,'_',ref_hap,'_',chrom,'_',region_start,'_',region_end,'_',bin_size)
   }
   if(hap_order == 'refdist'){
     ## cluster rows of matrix by similarity to reference sample reorder matrix to match that clustering
