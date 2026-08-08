@@ -15,8 +15,8 @@
 #' @param color_high Color for presence (bin presence = 1)
 #' @param width Plot width (inches)
 #' @param height Plot height (inches)
-#' @param gene_bounds Optional BED file of gene regions to be overlaid on PAV plot. Follows typical tab-delimited BED format with 4 columns: (i) chromosome, (ii) 0-based start coordinate, (iii) end coordinate, and (iv) gene name
-#' @param gene_color If supplying gene regions, color of highlighting polygon
+#' @param gene_bounds Optional BED file of gene regions to be overlaid on PAV plot. Follows typical tab-delimited BED format with 4 columns: (i) chromosome, (ii) 0-based start coordinate, (iii) end coordinate, and (iv) gene name [somewhat functional]
+#' @param gene_color If supplying gene regions, color of highlighting polygon [somewhat functional]
 #' @param hap_order Method for determining vertical order of haplotypes in plot. Options are: 'refdist' (default) = haplotypes are ordered by distance to the reference haplotype, with the reference haplotype appearing at the top of the plot and haplotype divergence increases as y decreases; 'clust' = haplotypes are clustered by using dist() and hclust(), order of clusters is arbitrary
 #' @import dplyr
 #' @import ggnewscale
@@ -26,7 +26,7 @@
 #' @importFrom stats hclust dist
 #' @export
 plot_pav <- function(coord_map, presence_matrix, bin_info,
-                     output_prefix, output_fmt = 'pdf', roi = NULL,
+                     output_prefix = NULL, output_fmt = 'pdf', roi = NULL,
                      ref_hap = NULL, chrom = NULL, region_start = NULL, region_end = NULL,
                      bin_size = 100, color_low = 'white', color_high = '#0F85A0FF',
                      width = 14, height = 8,
@@ -57,9 +57,11 @@ plot_pav <- function(coord_map, presence_matrix, bin_info,
   if(missing(region_end)){
     stop("Must specify 'region_end'")
   }
+
   if(is.null(output_prefix)){
     output_prefix <- paste0(roi,'_',ref_hap,'_',chrom,'_',region_start,'_',region_end,'_',bin_size)
   }
+
   if(hap_order == 'refdist'){
     ## cluster rows of matrix by similarity to reference sample reorder matrix to match that clustering
     row.dists <- dist(presence_matrix)
@@ -156,52 +158,56 @@ plot_pav <- function(coord_map, presence_matrix, bin_info,
     x_labels[i] <- formatC(ref_pos, format = "f", digits = 0, big.mark = ",")
   }
 
-  # If supplied, convert gene bounds into expanded coordinate space
-  # if(!is.null('gene_bounds')){
-  #   n1 <- length(unique(df$Sample))+1
-  #   colnames(gene_bounds) <- c('chr','gene.start','gene.end','gene.name')
-  #   gene_bounds$gene.start <- gene_bounds$gene.start+1 ## convert 0-based BED to 1-based coord system used here
-  #   filt_gene_bounds <- gene_bounds[which(gene_bounds$gene.start >= min(bin_info$ref_start[bin_info$ref_start != 0]) &
-  #                                           gene_bounds$gene.end <= max(bin_info$ref_end[bin_info$ref_end != 0]) ),]
-  #   if(nrow(filt_gene_bounds) < nrow(gene_bounds)){ print("Some genes not within processed ROI bounds")}
-  #   filt_gene_bounds$y1 <- -1
-  #   filt_gene_bounds$y2 <- n1
-  #   filt_gene_bounds.x <- NULL
-  #   filt_gene_bounds.y <- NULL
-  #   filt_gene_bounds.group <- NULL
-  #   filt_gene_bounds.geneside <- NULL
-  #   filt_gene_bounds$exp.midpt <- NA
-  #   for(r in 1:nrow(filt_gene_bounds)){
-  #     filt_gene_bounds.x <- c(filt_gene_bounds.x, filt_gene_bounds$gene.start[r], filt_gene_bounds$gene.end[r],
-  #                             filt_gene_bounds$gene.end[r], filt_gene_bounds$gene.start[r])
-  #     filt_gene_bounds.y <- c(filt_gene_bounds.y, filt_gene_bounds$y1[r], filt_gene_bounds$y1[r],
-  #                             filt_gene_bounds$y2[r], filt_gene_bounds$y2[r])
-  #     filt_gene_bounds.group <- c(filt_gene_bounds.group, filt_gene_bounds$gene.name[r],
-  #                                 filt_gene_bounds$gene.name[r], filt_gene_bounds$gene.name[r], filt_gene_bounds$gene.name[r])
-  #     filt_gene_bounds.geneside <- c(filt_gene_bounds.geneside, 'left','right','right','left')
-  #     filt_gene_bounds$exp.midpt[r] <- bin_info[which(bin_info$ref_start <= filt_gene_bounds$midpt[r] &
-  #                                                       bin_info$ref_end >= filt_gene_bounds$midpt[r]), 'expanded_start']+(bin_size/2)
-  #   }
-  #   filt_gene_bounds.poly <- data.frame(x = filt_gene_bounds.x, y = filt_gene_bounds.y,
-  #                                       p = filt_gene_bounds.group, side = filt_gene_bounds.geneside)
-  #   ## convert x coords to appx bin starts/ends in expanded coord space
-  #   filt_gene_bounds.poly$exp.x <- NA
-  #   for(r in 1:nrow(filt_gene_bounds.poly)){
-  #     if(filt_gene_bounds.poly$side[r] == 'left'){
-  #       filt_gene_bounds.poly$exp.x[r] <- bin_info[which(bin_info$ref_start <= filt_gene_bounds.poly$x[r] &
-  #                                                     bin_info$ref_end >= filt_gene_bounds.poly$x[r]), 'expanded_start']
-  #     } else if(filt_gene_bounds.poly$side[r] == 'right'){
-  #       filt_gene_bounds.poly$exp.x[r] <- bin_info[which(bin_info$ref_start <= filt_gene_bounds.poly$x[r] &
-  #                                                     bin_info$ref_end >= filt_gene_bounds.poly$x[r]), 'expanded_end']
-  #     }
-  #
-  #   }
-  # }
+  ## If supplied, convert gene bounds into expanded coordinate space
+  if(!is.null('gene_bounds')){
+    n1 <- length(unique(df$Sample))+1
+    colnames(gene_bounds) <- c('chr','gene.start','gene.end','gene.name')
+    gene_bounds$gene.start <- gene_bounds$gene.start+1 ## convert 0-based BED to 1-based coord system used here
+    gene_bounds$midpt <- (gene_bounds$gene.start + gene_bounds$gene.end)/2
+    filt_gene_bounds <- gene_bounds[which(gene_bounds$gene.start >= min(bin_info$ref_start[bin_info$ref_start != 0]) &
+                                            gene_bounds$gene.end <= max(bin_info$ref_end[bin_info$ref_end != 0]) ),]
+    if(nrow(filt_gene_bounds) < nrow(gene_bounds)){ print("Some genes not within processed ROI bounds")}
+    filt_gene_bounds$y1 <- n1-0.3
+    filt_gene_bounds$y2 <- n1
+    filt_gene_bounds.x <- NULL
+    filt_gene_bounds.y <- NULL
+    filt_gene_bounds.group <- NULL
+    filt_gene_bounds.geneside <- NULL
+    filt_gene_bounds$exp.midpt <- NA
+    for(r in 1:nrow(filt_gene_bounds)){
+      filt_gene_bounds.x <- c(filt_gene_bounds.x, filt_gene_bounds$gene.start[r], filt_gene_bounds$gene.end[r],
+                              filt_gene_bounds$gene.end[r], filt_gene_bounds$gene.start[r])
+      filt_gene_bounds.y <- c(filt_gene_bounds.y, filt_gene_bounds$y1[r], filt_gene_bounds$y1[r],
+                              filt_gene_bounds$y2[r], filt_gene_bounds$y2[r])
+      filt_gene_bounds.group <- c(filt_gene_bounds.group, filt_gene_bounds$gene.name[r],
+                                  filt_gene_bounds$gene.name[r], filt_gene_bounds$gene.name[r], filt_gene_bounds$gene.name[r])
+      filt_gene_bounds.geneside <- c(filt_gene_bounds.geneside, 'left','right','right','left')
+      filt_gene_bounds$exp.midpt[r] <- bin_info[which(bin_info$ref_start <= filt_gene_bounds$midpt[r] &
+                                                        bin_info$ref_end >= filt_gene_bounds$midpt[r]), 'expanded_start']+(bin_size/2)
+    }
+    filt_gene_bounds.poly <- data.frame(x = filt_gene_bounds.x, y = filt_gene_bounds.y,
+                                        p = filt_gene_bounds.group, side = filt_gene_bounds.geneside)
+    ## convert x coords to appx bin starts/ends in expanded coord space
+    filt_gene_bounds.poly$exp.x <- NA
+    for(r in 1:nrow(filt_gene_bounds.poly)){
+      if(filt_gene_bounds.poly$side[r] == 'left'){
+        filt_gene_bounds.poly$exp.x[r] <- bin_info[which(bin_info$ref_start <= filt_gene_bounds.poly$x[r] &
+                                                      bin_info$ref_end >= filt_gene_bounds.poly$x[r]), 'expanded_start']
+      } else if(filt_gene_bounds.poly$side[r] == 'right'){
+        filt_gene_bounds.poly$exp.x[r] <- bin_info[which(bin_info$ref_start <= filt_gene_bounds.poly$x[r] &
+                                                      bin_info$ref_end >= filt_gene_bounds.poly$x[r]), 'expanded_end']
+      }
+
+    }
+  }
 
   axis_faces <- ifelse(levels(factor(df$Sample)) == ref_hap, "bold", "plain")
 
-  if(exists('gene_bounds.poly')){
+  if(exists('filt_gene_bounds.poly')){
     p <- ggplot(df, aes(x = .data$expanded_start, y = .data$Sample, fill = .data$Presence)) +
+      geom_polygon(data = filt_gene_bounds.poly, mapping = aes(x = .data$exp.x, y = .data$y, group = .data$p),
+                   inherit.aes = FALSE,
+                   fill = gene_color, alpha = 1) +
       geom_tile(color = NA) +
       scale_fill_gradient(low = color_low, high = color_high,
                           name = "Proportion\nPresent",
@@ -219,13 +225,12 @@ plot_pav <- function(coord_map, presence_matrix, bin_info,
            x = "Reference Coordinate Position",
            y = "Sample") +
       theme_minimal() +
-      # geom_polygon(data = filt_gene_bounds.poly, mapping = aes(x = .data$exp.x, y = .data$y, group = .data$p),
-      #              inherit.aes = FALSE,
-      #              fill = gene_color, alpha = 0.2) +
       # annotate("text", x = filt_gene_bounds$exp.midpt,
       #          y = rep(c(n1+0.05, n1+0.1, n1+0.15), nrow(filt_gene_bounds))[1:nrow(filt_gene_bounds)],
       #          label = filt_gene_bounds$gene.name, size = 1) +
+      coord_cartesian(xlim = range(df$expanded_start), ylim = c(1,n1+0.1)) +
       geom_hline(yintercept = rep(1:length(unique(df$Sample)), each = 2) - 0.5, linewidth = 0.25) +
+      # geom_vline(xintercept = filt_gene_bounds.poly$exp.x, linewidth = 0.5, color = gene_color) +
       theme(axis.text.y = element_markdown(face = axis_faces, color = 'black'),
             axis.text.x = element_text(angle = 45, hjust = 1, color = 'black'),
             panel.grid.major = element_blank(),
@@ -233,6 +238,7 @@ plot_pav <- function(coord_map, presence_matrix, bin_info,
             plot.title = element_markdown(hjust = 0.5, face = "bold"),
             plot.subtitle = element_text(hjust = 0.5),
             legend.position = "right",
+            legend.title = element_text(hjust = 0.5),
             panel.border = element_rect(color = "black", fill = NA, linewidth = 0.75),
             axis.ticks.x = element_line(color = 'black', linewidth = 0.25),
             text = element_text(color = 'black'))
@@ -263,6 +269,7 @@ plot_pav <- function(coord_map, presence_matrix, bin_info,
             plot.title = element_markdown(hjust = 0.5, face = "bold"),
             plot.subtitle = element_text(hjust = 0.5),
             legend.position = "right",
+            legend.title = element_text(hjust = 0.5),
             panel.border = element_rect(color = "black", fill = NA, linewidth = 0.75),
             axis.ticks.x = element_line(color = 'black', linewidth = 0.25),
             text = element_text(color = 'black'))
