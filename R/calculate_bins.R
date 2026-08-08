@@ -116,9 +116,9 @@ calculate_bins <- function(vcf, coord_map, bin_size, start_pos, end_pos) {
         } else {
           allele_seq <- alt_alleles[allele_idx]
           if(nchar(allele_seq) > nchar(ref_allele)){
-            var.type <- 'insertion'
+            var.type <- 'ins'
           } else if(nchar(allele_seq) < nchar(ref_allele)){
-            var.type <- 'deletion'
+            var.type <- 'del'
           } else{
             var.type <- 'snp'
           }
@@ -128,14 +128,14 @@ calculate_bins <- function(vcf, coord_map, bin_size, start_pos, end_pos) {
 
         #### added accounting for deletions == absence of locus
         # Mark positions as present for this allele
-        if(var.type %in% c('insertion','snp','ref')){
+        if(var.type %in% c('ins','snp','ref')){
           for (offset in 0:(allele_len - 1)) {
             pos <- expanded_start + offset
             if (pos <= max_expanded) {
               present_positions[pos] <- TRUE
             }
           }
-        } else if(var.type == 'deletion'){
+        } else if(var.type == 'del'){
           for (offset in 0:(nchar(ref_allele) - 1)) {
             pos <- expanded_start + offset
             if (pos <= max_expanded) {

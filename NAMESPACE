@@ -3,7 +3,6 @@
 export(build_coordsystem)
 export(calculate_bins)
 export(plot_pav)
-export(plot_pav_hiliteInsertions)
 import(dplyr)
 import(ggnewscale)
 import(ggplot2)

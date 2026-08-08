@@ -22,8 +22,8 @@ build_coordsystem <- function(vcf, start_pos = NULL, end_pos = NULL) {
   fix <- getFIX(vcf)
   fix <- fix[order(as.numeric(fix[,2])),]
   positions <- as.numeric(fix[, 'POS'])
-  refs <- fix[, "REF"]
-  alts <- fix[, "ALT"]
+  refs <- fix[, 'REF']
+  alts <- fix[, 'ALT']
 
   # Determine region boundaries
   if (is.null(start_pos)) {
@@ -38,6 +38,14 @@ build_coordsystem <- function(vcf, start_pos = NULL, end_pos = NULL) {
   positions <- positions[in_region]
   refs <- refs[in_region]
   alts <- alts[in_region]
+  ## make sure all lengths are equal
+  if(length(positions) != length(refs) | length(positions) != length(alts)){
+    stop("Check VCF formatting - issue with POS / REF / ALT counts")
+  }
+  ## make sure no multiallelic variants
+  if(any(grepl(',', alts)) | any(grepl(',', refs))){
+    stop("Check VCF formatting - must not contain multiallelic records")
+  }
 
   # Initialize coordinate mapping
   coord_map <- data.frame(
@@ -48,21 +56,27 @@ build_coordsystem <- function(vcf, start_pos = NULL, end_pos = NULL) {
     stringsAsFactors = FALSE
   )
 
-  expanded_pos <- 1
+  expanded_pos <- 1   ## expanded coordinate system starts at 1 (exp 1 == ref start_pos)
   last_ref_pos <- start_pos - 1
 
   for (i in seq_along(positions)) {
     ref_pos <- positions[i]
     ref_allele <- refs[i]
-    alt_alleles <- strsplit(alts[i], ",")[[1]]
+    alt_allele <- alts[i]
 
-    # Add intervening reference positions
-    if (ref_pos > last_ref_pos + 1) {
-      tmp.ref_pos <- (last_ref_pos + 1):(ref_pos - 1)
-      tmp.expanded_pos <- seq(from = expanded_pos, by = 1, length.out = length(tmp.ref_pos))
+    ## probably don't need this check?
+    # if(substr(ref_allele, 1, 1) != substr(alt_allele, 1, 1)){
+    #   stop('Check VCF formatting - first nucleotide not identical between REF / ALT allele')
+    # }
+
+    # Add intervening reference positions if moving more than 1 base position (i.e., not processing
+    # another allele at the same locus just processed or at the subsequent position)
+    if(ref_pos > last_ref_pos + 1){
+      tmp.ref_pos <- (last_ref_pos + 1):(ref_pos - 1) ## the intervening positions in ref coords
+      tmp.expanded_pos <- seq(from = expanded_pos, by = 1, length.out = length(tmp.ref_pos)) ## " expanded coords
       tmp.variant_type <- rep('ref', length(tmp.ref_pos))
       tmp.max_length <- rep(1, length(tmp.ref_pos))
-      interven.map <- data.frame(ref_pos = tmp.ref_pos,
+      interven.map <- data.frame(ref_pos = tmp.ref_pos, ## coord_map rows for intervening coords
                                  expanded_pos = tmp.expanded_pos,
                                  variant_type = tmp.variant_type,
                                  max_length = tmp.max_length)
@@ -70,24 +84,18 @@ build_coordsystem <- function(vcf, start_pos = NULL, end_pos = NULL) {
       expanded_pos <- max(coord_map$expanded_pos) + 1
     }
 
-    # Calculate max allele length at this position
-    all_alleles <- c(ref_allele, alt_alleles)
-    allele_lengths <- nchar(all_alleles)
-    max_len <- max(allele_lengths)
-
     # Determine variant type
     ref_len <- nchar(ref_allele)
-    has_insertion <- any(allele_lengths > ref_len)
-    has_deletion <- any(allele_lengths < ref_len)
-
-    if (has_insertion && has_deletion) {
-      var_type <- "indel"
-    } else if (has_insertion) {
-      var_type <- "insertion"
-    } else if (has_deletion) {
-      var_type <- "deletion"
-    } else {
-      var_type <- "snp"
+    alt_len <- nchar(alt_allele)
+    max_len <- max(ref_len, alt_len)
+    if(alt_len > ref_len){
+      var_type <- 'ins'
+    } else if(ref_len > alt_len){
+      var_type <- 'del'
+    } else if(ref_len == alt_len & ref_len == 1){
+      var_type <- 'snp'
+    } else if(ref_len > alt_len & ref_len > 1){
+      var_type <- 'mnp'
     }
 
     # Add mapping for this variant position
@@ -99,10 +107,10 @@ build_coordsystem <- function(vcf, start_pos = NULL, end_pos = NULL) {
       max_length = max_len
     ))
 
-    if(var_type == 'deletion'){ ## edited - deletions shouldn't expand the coord system
+    if(var_type == 'del'){ ## deletions don't expand the coord system
       expanded_pos <- expanded_pos + 1
     } else{
-      expanded_pos <- expanded_pos + max_len
+      expanded_pos <- expanded_pos + max_len ## everything else does by max allele size
     }
 
     last_ref_pos <- ref_pos

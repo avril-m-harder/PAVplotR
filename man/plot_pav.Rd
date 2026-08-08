@@ -8,7 +8,7 @@ plot_pav(
   coord_map,
   presence_matrix,
   bin_info,
-  output_prefix,
+  output_prefix = NULL,
   output_fmt = "pdf",
   roi = NULL,
   ref_hap = NULL,
@@ -32,7 +32,7 @@ plot_pav(
 
 \item{bin_info}{Data frame with bin coordinate information, written by calculate_bins()}
 
-\item{output_prefix}{Output plot file prefix. Default is to substitute '-PAV.pdf' (and/or '-PAV.tiff') for '.vcf.gz' in input VCF file name.}
+\item{output_prefix}{Output plot file prefix. If not set, will default to '[roi]_[ref_hap]_[chrom]_[region_start]_[region_end]_[bin_size]'}
 
 \item{output_fmt}{File format for output plot. Options are 'pdf' (default), 'tiff', or 'both'}
 
@@ -56,9 +56,9 @@ plot_pav(
 
 \item{height}{Plot height (inches)}
 
-\item{gene_bounds}{Optional BED file of gene regions to be overlaid on PAV plot. Follows typical tab-delimited BED format with 4 columns: (i) chromosome, (ii) 0-based start coordinate, (iii) end coordinate, and (iv) gene name}
+\item{gene_bounds}{Optional BED file of gene regions to be overlaid on PAV plot. Follows typical tab-delimited BED format with 4 columns: (i) chromosome, (ii) 0-based start coordinate, (iii) end coordinate, and (iv) gene name [somewhat functional]}
 
-\item{gene_color}{If supplying gene regions, color of highlighting polygon}
+\item{gene_color}{If supplying gene regions, color of highlighting polygon [somewhat functional]}
 
 \item{hap_order}{Method for determining vertical order of haplotypes in plot. Options are: 'refdist' (default) = haplotypes are ordered by distance to the reference haplotype, with the reference haplotype appearing at the top of the plot and haplotype divergence increases as y decreases; 'clust' = haplotypes are clustered by using dist() and hclust(), order of clusters is arbitrary}
 }
