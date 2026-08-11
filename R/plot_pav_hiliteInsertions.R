@@ -65,68 +65,68 @@ plot_pav_hiliteInsertions <- function(presence_matrix, bin_info,
     presence_matrix <- presence_matrix[ord.ind,]
   }
 
-  # Convert to long format for ggplot
+  ## Convert to long format for ggplot
   df <- melt(presence_matrix)
   colnames(df) <- c("Sample", "Bin", "Presence")
 
-  # Extract bin number for proper ordering
+  ## Extract bin number for proper ordering
   df$BinNum <- as.numeric(gsub("Bin_", "", df$Bin))
 
-  # Merge with bin info to get reference coordinates
+  ## Merge with bin info to get reference coordinates
   df <- merge(df, bin_info, by.x = "BinNum", by.y = "bin_num")
 
-  # Determine reasonable number of x-axis breaks
+  ## Determine reasonable number of x-axis breaks
   n_breaks <- min(10, nrow(bin_info)) ## minimum of 10 or the number of bins
   break_indices <- round(seq(1, nrow(bin_info), length.out = n_breaks)) ## number of bins / 10 (or min)
 
-  # Create custom breaks and labels with round numbers
+  ## Create custom breaks and labels with round numbers
   region_span <- region_end - region_start
 
-  # Determine appropriate rounding interval for ~10 total labels
+  ## Determine appropriate rounding interval for ~10 total labels
   log_span <- log10(region_span)
   interval_magnitude <- floor(log_span - 1)
   base_interval <- 10^interval_magnitude
 
-  # Choose a "nice" interval (1, 2, 5, or 10 times the base)
+  ## Choose a "nice" interval (1, 2, 5, or 10 times the base)
   nice_intervals <- c(1, 2, 5, 10) * base_interval
   target_n_labels <- 10
   n_labels_each <- region_span / nice_intervals
   interval <- nice_intervals[which.min(abs(n_labels_each - target_n_labels))]
 
-  # Generate round number positions
+  ## Generate round number positions
   interior_positions <- seq(
     from = ceiling(region_start / interval) * interval,
     to = floor(region_end / interval) * interval,
     by = interval
   )
 
-  # Combine with start and end, ensure uniqueness and sort
+  ## Combine with start and end, ensure uniqueness and sort
   ref_positions <- unique(sort(c(region_start, interior_positions, region_end)))
 
-  # Remove zeros if present
+  ## Remove zeros if present
   ref_positions <- ref_positions[ref_positions != 0]
 
-  # Map reference positions to expanded coordinates
+  ## Map reference positions to expanded coordinates
   x_breaks <- numeric(length(ref_positions))
   x_labels <- character(length(ref_positions))
 
   for (i in seq_along(ref_positions)) {
     ref_pos <- ref_positions[i]
 
-    # Find expanded position by looking up in coord_map
+    ## Find expanded position by looking up in coord_map
     map_idx <- which(coord_map$ref_pos == ref_pos)
 
     if (length(map_idx) > 0) {
-      # Exact match found
+      ## Exact match found
       x_breaks[i] <- coord_map$expanded_pos[map_idx[1]]
     } else {
-      # print(paste0('possible issue at ',i))
-      # Interpolate between nearest positions
+      ## print(paste0('possible issue at ',i))
+      ## Interpolate between nearest positions
       lower_idx <- max(which(coord_map$ref_pos < ref_pos))
       upper_idx <- min(which(coord_map$ref_pos > ref_pos))
 
       if (length(lower_idx) > 0 && length(upper_idx) > 0) {
-        # Linear interpolation
+        ## Linear interpolation
         ref_lower <- coord_map$ref_pos[lower_idx]
         ref_upper <- coord_map$ref_pos[upper_idx]
         exp_lower <- coord_map$expanded_pos[lower_idx]
@@ -135,10 +135,10 @@ plot_pav_hiliteInsertions <- function(presence_matrix, bin_info,
         frac <- (ref_pos - ref_lower) / (ref_upper - ref_lower)
         x_breaks[i] <- exp_lower + frac * (exp_upper - exp_lower)
       } else if (length(lower_idx) > 0) {
-        # Use lower bound
+        ## Use lower bound
         x_breaks[i] <- coord_map$expanded_pos[lower_idx]
       } else {
-        # Use upper bound
+        ## Use upper bound
         x_breaks[i] <- coord_map$expanded_pos[upper_idx]
       }
     }
@@ -160,20 +160,20 @@ plot_pav_hiliteInsertions <- function(presence_matrix, bin_info,
     }
   }
 
-  # Transform data to scale each column relative to reference sample
-  # df <- df %>%
-  #   group_by(expanded_start) %>%
-  #   mutate(
-  #     ref_value = Presence[Sample == ref][1],
-  #     # Scale so that: 0 -> 0, ref_value -> 0.5, 1 -> 1
-  #     Presence_scaled = case_when(
-  #       Presence == 0 ~ 0,  # Keep zeros as zero
-  #       is.na(ref_value) | ref_value == 0 ~ Presence,  # If ref is 0, use original
-  #       Presence <= ref_value ~ Presence * (0.5 / ref_value),  # Scale 0-ref to 0-0.5
-  #       Presence > ref_value ~ 0.5 + (Presence - ref_value) * (0.5 / (1 - ref_value))  # Scale ref-1 to 0.5-1
-  #     )
-  #   ) %>%
-  #   ungroup()
+  ## Transform data to scale each column relative to reference sample
+  ## df <- df %>%
+  ##   group_by(expanded_start) %>%
+  ##   mutate(
+  ##     ref_value = Presence[Sample == ref][1],
+  ##     ## Scale so that: 0 -> 0, ref_value -> 0.5, 1 -> 1
+  ##     Presence_scaled = case_when(
+  ##       Presence == 0 ~ 0,  ## Keep zeros as zero
+  ##       is.na(ref_value) | ref_value == 0 ~ Presence,  ## If ref is 0, use original
+  ##       Presence <= ref_value ~ Presence * (0.5 / ref_value),  ## Scale 0-ref to 0-0.5
+  ##       Presence > ref_value ~ 0.5 + (Presence - ref_value) * (0.5 / (1 - ref_value))  ## Scale ref-1 to 0.5-1
+  ##     )
+  ##   ) %>%
+  ##   ungroup()
 
   if(exists('gene_bounds')){
     n1 <- length(unique(df$Sample))+1
@@ -218,44 +218,44 @@ plot_pav_hiliteInsertions <- function(presence_matrix, bin_info,
   axis_faces <- ifelse(levels(factor(df$Sample)) == ref_hap, "bold", "plain")
   if(exists('gene_bounds.poly')){
     ## newer -- works, but meh
-    # ins_p <- ggplot(df, aes(x = expanded_start, y = Sample, fill = Presence_scaled)) +
-    #   geom_tile(color = NA) +
-    #   # scale_fill_gradient2(low = color_low, mid = color_high, high = ins_color_high,
-    #   #                     name = "Proportion\nPresent",
-    #   #                     midpoint = 0.5) +
-    #   scale_fill_gradientn(
-    #     colors = c("white", color_low, color_high, ins_color_high),
-    #     values = scales::rescale(c(0, 0.001, 0.5, 1)),  # 0=white, just above 0=low_color, 0.5=mid, 1=high
-    #     name = "Proportion\nPresent",
-    #     limits = c(0, 1)
-    #   ) +
-    #   scale_x_continuous(breaks = x_breaks, labels = x_labels, expand = c(0,0)) +
-    #   scale_y_discrete(expand = c(0,0)) +
-    #   labs(title = sprintf("%s PAV", formatC(roi)),
-    #        subtitle = sprintf("%s %s: %s - %s",
-    #                           formatC(ref, format = "f"),
-    #                           formatC(chrom, format = "f"),
-    #                           formatC(region_start, format = "f",
-    #                                   digits = 0, big.mark = ","),
-    #                           formatC(region_end, format = "f",
-    #                                   digits = 0, big.mark = ",")),
-    #        x = "Reference Coordinate Position",
-    #        y = "Sample") +
-    #   theme_minimal() +
-    #   geom_hline(yintercept = rep(1:length(unique(df$Sample)), each = 2) - 0.5, linewidth = 0.25) +
-    #   geom_vline(xintercept = exp.gene.start, linewidth = 1, color = gene_color) +
-    #   geom_vline(xintercept = exp.gene.end, linewidth = 1, color = gene_color) +
-    #   theme(axis.text.y = element_markdown(face = axis_faces, color = 'black'),
-    #         axis.text.x = element_text(angle = 45, hjust = 1, color = 'black'),
-    #         panel.grid.major = element_blank(),
-    #         panel.grid.minor = element_blank(),
-    #         plot.title = element_markdown(hjust = 0.5, face = "bold"),
-    #         plot.subtitle = element_text(hjust = 0.5),
-    #         legend.position = "right",
-    #         # panel.background = element_rect(fill = plot_bg),
-    #         panel.border = element_rect(color = "black", fill = NA, linewidth = 0.75),
-    #         axis.ticks.x = element_line(color = 'black', linewidth = 0.25),
-    #         text = element_text(color = 'black'))
+    ## ins_p <- ggplot(df, aes(x = expanded_start, y = Sample, fill = Presence_scaled)) +
+    ##   geom_tile(color = NA) +
+    ##   ## scale_fill_gradient2(low = color_low, mid = color_high, high = ins_color_high,
+    ##   ##                     name = "Proportion\nPresent",
+    ##   ##                     midpoint = 0.5) +
+    ##   scale_fill_gradientn(
+    ##     colors = c("white", color_low, color_high, ins_color_high),
+    ##     values = scales::rescale(c(0, 0.001, 0.5, 1)),  ## 0=white, just above 0=low_color, 0.5=mid, 1=high
+    ##     name = "Proportion\nPresent",
+    ##     limits = c(0, 1)
+    ##   ) +
+    ##   scale_x_continuous(breaks = x_breaks, labels = x_labels, expand = c(0,0)) +
+    ##   scale_y_discrete(expand = c(0,0)) +
+    ##   labs(title = sprintf("%s PAV", formatC(roi)),
+    ##        subtitle = sprintf("%s %s: %s - %s",
+    ##                           formatC(ref, format = "f"),
+    ##                           formatC(chrom, format = "f"),
+    ##                           formatC(region_start, format = "f",
+    ##                                   digits = 0, big.mark = ","),
+    ##                           formatC(region_end, format = "f",
+    ##                                   digits = 0, big.mark = ",")),
+    ##        x = "Reference Coordinate Position",
+    ##        y = "Sample") +
+    ##   theme_minimal() +
+    ##   geom_hline(yintercept = rep(1:length(unique(df$Sample)), each = 2) - 0.5, linewidth = 0.25) +
+    ##   geom_vline(xintercept = exp.gene.start, linewidth = 1, color = gene_color) +
+    ##   geom_vline(xintercept = exp.gene.end, linewidth = 1, color = gene_color) +
+    ##   theme(axis.text.y = element_markdown(face = axis_faces, color = 'black'),
+    ##         axis.text.x = element_text(angle = 45, hjust = 1, color = 'black'),
+    ##         panel.grid.major = element_blank(),
+    ##         panel.grid.minor = element_blank(),
+    ##         plot.title = element_markdown(hjust = 0.5, face = "bold"),
+    ##         plot.subtitle = element_text(hjust = 0.5),
+    ##         legend.position = "right",
+    ##         ## panel.background = element_rect(fill = plot_bg),
+    ##         panel.border = element_rect(color = "black", fill = NA, linewidth = 0.75),
+    ##         axis.ticks.x = element_line(color = 'black', linewidth = 0.25),
+    ##         text = element_text(color = 'black'))
 
     ## old == works
     ins_p <- ggplot(df, aes(x = .data$expanded_start, y = .data$Sample)) +
@@ -291,7 +291,7 @@ plot_pav_hiliteInsertions <- function(presence_matrix, bin_info,
             plot.title = element_markdown(hjust = 0.5, face = "bold"),
             plot.subtitle = element_text(hjust = 0.5),
             legend.position = "right",
-            # panel.background = element_rect(fill = plot_bg),
+            ## panel.background = element_rect(fill = plot_bg),
             panel.border = element_rect(color = "black", fill = NA, linewidth = 0.75),
             axis.ticks.x = element_line(color = 'black', linewidth = 0.25),
             text = element_text(color = 'black'))
@@ -329,7 +329,7 @@ plot_pav_hiliteInsertions <- function(presence_matrix, bin_info,
             plot.title = element_markdown(hjust = 0.5, face = "bold"),
             plot.subtitle = element_text(hjust = 0.5),
             legend.position = "right",
-            # panel.background = element_rect(fill = plot_bg),
+            ## panel.background = element_rect(fill = plot_bg),
             panel.border = element_rect(color = "black", fill = NA, linewidth = 0.75),
             axis.ticks.x = element_line(color = 'black', linewidth = 0.25),
             text = element_text(color = 'black'))

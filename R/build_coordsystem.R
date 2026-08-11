@@ -18,14 +18,14 @@ build_coordsystem <- function(vcf, start_pos = NULL, end_pos = NULL) {
     stop("Must specify 'end_pos' for region to be plotted")
   }
 
-  # Extract positions and alleles
+  ## Extract positions and alleles
   fix <- getFIX(vcf)
   fix <- fix[order(as.numeric(fix[,2])),]
   positions <- as.numeric(fix[, 'POS'])
   refs <- fix[, 'REF']
   alts <- fix[, 'ALT']
 
-  # Determine region boundaries
+  ## Determine region boundaries
   if (is.null(start_pos)) {
     start_pos <- min(positions)
   }
@@ -33,7 +33,7 @@ build_coordsystem <- function(vcf, start_pos = NULL, end_pos = NULL) {
     end_pos <- max(positions)
   }
 
-  # Filter variants to region
+  ## Filter variants to region
   in_region <- positions >= start_pos & positions <= end_pos
   positions <- positions[in_region]
   refs <- refs[in_region]
@@ -47,7 +47,7 @@ build_coordsystem <- function(vcf, start_pos = NULL, end_pos = NULL) {
     stop("Check VCF formatting - must not contain multiallelic records")
   }
 
-  # Initialize coordinate mapping
+  ## Initialize coordinate mapping
   coord_map <- data.frame(
     ref_pos = integer(),
     expanded_pos = integer(),
@@ -65,12 +65,12 @@ build_coordsystem <- function(vcf, start_pos = NULL, end_pos = NULL) {
     alt_allele <- alts[i]
 
     ## probably don't need this check?
-    # if(substr(ref_allele, 1, 1) != substr(alt_allele, 1, 1)){
-    #   stop('Check VCF formatting - first nucleotide not identical between REF / ALT allele')
-    # }
+    ## if(substr(ref_allele, 1, 1) != substr(alt_allele, 1, 1)){
+    ##   stop('Check VCF formatting - first nucleotide not identical between REF / ALT allele')
+    ## }
 
-    # Add intervening reference positions if moving more than 1 base position (i.e., not processing
-    # another allele at the same locus just processed or at the subsequent position)
+    ## Add intervening reference positions if moving more than 1 base position (i.e., not processing
+    ## another allele at the same locus just processed or at the subsequent position)
     if(ref_pos > last_ref_pos + 1){
       tmp.ref_pos <- (last_ref_pos + 1):(ref_pos - 1) ## the intervening positions in ref coords
       tmp.expanded_pos <- seq(from = expanded_pos, by = 1, length.out = length(tmp.ref_pos)) ## " expanded coords
@@ -84,7 +84,7 @@ build_coordsystem <- function(vcf, start_pos = NULL, end_pos = NULL) {
       expanded_pos <- max(coord_map$expanded_pos) + 1
     }
 
-    # Determine variant type
+    ## Determine variant type
     ref_len <- nchar(ref_allele)
     alt_len <- nchar(alt_allele)
     max_len <- max(ref_len, alt_len)
@@ -98,8 +98,8 @@ build_coordsystem <- function(vcf, start_pos = NULL, end_pos = NULL) {
       var_type <- 'mnp'
     }
 
-    # Add mapping for this variant position
-    # Use max_length to accommodate longest allele
+    ## Add mapping for this variant position
+    ## Use max_length to accommodate longest allele
     coord_map <- rbind(coord_map, data.frame(
       ref_pos = ref_pos,
       expanded_pos = expanded_pos,
@@ -116,7 +116,7 @@ build_coordsystem <- function(vcf, start_pos = NULL, end_pos = NULL) {
     last_ref_pos <- ref_pos
   }
 
-  # Add any remaining reference positions to end_pos
+  ## Add any remaining reference positions to end_pos
   if (end_pos > last_ref_pos) {
     tmp.ref_pos <- (last_ref_pos + 1):end_pos
     tmp.expanded_pos <- seq(from = expanded_pos, by = 1, length.out = length(tmp.ref_pos))

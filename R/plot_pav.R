@@ -77,68 +77,68 @@ plot_pav <- function(coord_map, presence_matrix, bin_info,
     presence_matrix <- presence_matrix[ord.ind,]
   }
 
-  # Convert to long format for ggplot
+  ## Convert to long format for ggplot
   df <- melt(presence_matrix)
   colnames(df) <- c("Sample", "Bin", "Presence")
 
-  # Extract bin number for proper ordering
+  ## Extract bin number for proper ordering
   df$BinNum <- as.numeric(gsub("Bin_", "", df$Bin))
 
-  # Merge with bin info to get reference coordinates
+  ## Merge with bin info to get reference coordinates
   df <- merge(df, bin_info, by.x = "BinNum", by.y = "bin_num")
 
-  # Determine reasonable number of x-axis breaks
+  ## Determine reasonable number of x-axis breaks
   n_breaks <- min(10, nrow(bin_info)) ## minimum of 10 or the number of bins
   break_indices <- round(seq(1, nrow(bin_info), length.out = n_breaks)) ## number of bins / 10 (or min)
 
-  # Create custom breaks and labels with round numbers
+  ## Create custom breaks and labels with round numbers
   region_span <- region_end - region_start
 
-  # Determine appropriate rounding interval for ~10 total labels
+  ## Determine appropriate rounding interval for ~10 total labels
   log_span <- log10(region_span)
   interval_magnitude <- floor(log_span - 1)
   base_interval <- 10^interval_magnitude
 
-  # Choose a "nice" interval (1, 2, 5, or 10 times the base)
+  ## Choose a "nice" interval (1, 2, 5, or 10 times the base)
   nice_intervals <- c(1, 2, 5, 10) * base_interval
   target_n_labels <- 10
   n_labels_each <- region_span / nice_intervals
   interval <- nice_intervals[which.min(abs(n_labels_each - target_n_labels))]
 
-  # Generate round number positions
+  ## Generate round number positions
   interior_positions <- seq(
     from = ceiling(region_start / interval) * interval,
     to = floor(region_end / interval) * interval,
     by = interval
   )
 
-  # Combine with start and end, ensure uniqueness and sort
+  ## Combine with start and end, ensure uniqueness and sort
   ref_positions <- unique(sort(c(region_start, interior_positions, region_end)))
 
-  # Remove zeros if present
+  ## Remove zeros if present
   ref_positions <- ref_positions[ref_positions != 0]
 
-  # Map reference positions to expanded coordinates
+  ## Map reference positions to expanded coordinates
   x_breaks <- numeric(length(ref_positions))
   x_labels <- character(length(ref_positions))
 
   for (i in seq_along(ref_positions)) {
     ref_pos <- ref_positions[i]
 
-    # Find expanded position by looking up in coord_map
+    ## Find expanded position by looking up in coord_map
     map_idx <- which(coord_map$ref_pos == ref_pos)
 
     if (length(map_idx) > 0) {
-      # Exact match found
+      ## Exact match found
       x_breaks[i] <- coord_map$expanded_pos[map_idx[1]]
     } else {
-      # print(paste0('possible issue at ',i))
-      # Interpolate between nearest positions
+      ## print(paste0('possible issue at ',i))
+      ## Interpolate between nearest positions
       lower_idx <- max(which(coord_map$ref_pos < ref_pos))
       upper_idx <- min(which(coord_map$ref_pos > ref_pos))
 
       if (length(lower_idx) > 0 && length(upper_idx) > 0) {
-        # Linear interpolation
+        ## Linear interpolation
         ref_lower <- coord_map$ref_pos[lower_idx]
         ref_upper <- coord_map$ref_pos[upper_idx]
         exp_lower <- coord_map$expanded_pos[lower_idx]
@@ -147,10 +147,10 @@ plot_pav <- function(coord_map, presence_matrix, bin_info,
         frac <- (ref_pos - ref_lower) / (ref_upper - ref_lower)
         x_breaks[i] <- exp_lower + frac * (exp_upper - exp_lower)
       } else if (length(lower_idx) > 0) {
-        # Use lower bound
+        ## Use lower bound
         x_breaks[i] <- coord_map$expanded_pos[lower_idx]
       } else {
-        # Use upper bound
+        ## Use upper bound
         x_breaks[i] <- coord_map$expanded_pos[upper_idx]
       }
     }
@@ -225,12 +225,12 @@ plot_pav <- function(coord_map, presence_matrix, bin_info,
            x = "Reference Coordinate Position",
            y = "Sample") +
       theme_minimal() +
-      # annotate("text", x = filt_gene_bounds$exp.midpt,
-      #          y = rep(c(n1+0.05, n1+0.1, n1+0.15), nrow(filt_gene_bounds))[1:nrow(filt_gene_bounds)],
-      #          label = filt_gene_bounds$gene.name, size = 1) +
+      ## annotate("text", x = filt_gene_bounds$exp.midpt,
+      ##          y = rep(c(n1+0.05, n1+0.1, n1+0.15), nrow(filt_gene_bounds))[1:nrow(filt_gene_bounds)],
+      ##          label = filt_gene_bounds$gene.name, size = 1) +
       coord_cartesian(xlim = range(df$expanded_start), ylim = c(1,n1+0.1)) +
       geom_hline(yintercept = rep(1:length(unique(df$Sample)), each = 2) - 0.5, linewidth = 0.25) +
-      # geom_vline(xintercept = filt_gene_bounds.poly$exp.x, linewidth = 0.5, color = gene_color) +
+      ## geom_vline(xintercept = filt_gene_bounds.poly$exp.x, linewidth = 0.5, color = gene_color) +
       theme(axis.text.y = element_markdown(face = axis_faces, color = 'black'),
             axis.text.x = element_text(angle = 45, hjust = 1, color = 'black'),
             panel.grid.major = element_blank(),
