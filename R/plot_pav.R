@@ -3,10 +3,14 @@
 #' @param coord_map Map linking expanded coordinate system to original reference coordinate system, written by build_coordsystem()
 #' @param presence_matrix Matrix of presence/absence proportions, calculated by calculate_bins()
 #' @param bin_info Data frame with bin coordinate information, written by calculate_bins()
+#' @param na_matrix Matrix indicating bins that contain at least one NA call (= '1'), calculated by
+#' calculate_bins() for QC purposes
 #' @param output_prefix Output plot file prefix. If not set, will default to '[roi]_[ref_hap]_[chrom]_[region_start]_[region_end]_[bin_size]'
 #' @param output_fmt File format for output plot. Options are 'pdf' (default), 'tiff', or 'both'
 #' @param roi Name of region to be plotted
-#' @param ref_hap Name of reference haplotype. Should be the name of the haplotype against which variants are described (i.e., that alignments were made against to build the input VCF) and should also be included as a sample in the input VCF.
+#' @param ref_hap Name of reference haplotype. Should be the name of the haplotype against which variants are
+#' described (i.e., that alignments were made against to build the input VCF) and should also be included as
+#' a sample in the input VCF.
 #' @param chrom Name of chromosome containing region to be plotted
 #' @param region_start First position of region in ref_hap coordinate space to be plotted (1-based)
 #' @param region_end Last position of region in ref_hap coordinate space to be plotted
@@ -15,9 +19,14 @@
 #' @param color_high Color for presence (bin presence = 1)
 #' @param width Plot width (inches)
 #' @param height Plot height (inches)
-#' @param gene_bounds Optional BED file of gene regions to be overlaid on PAV plot. Follows typical tab-delimited BED format with 4 columns: (i) chromosome, (ii) 0-based start coordinate, (iii) end coordinate, and (iv) gene name [somewhat functional]
+#' @param gene_bounds Optional BED file of gene regions to be overlaid on PAV plot. Follows typical
+#' tab-delimited BED format with 4 columns: (i) chromosome, (ii) 0-based start coordinate, (iii) end
+#' coordinate, and (iv) gene name [somewhat functional]
 #' @param gene_color If supplying gene regions, color of highlighting polygon [somewhat functional]
-#' @param hap_order Method for determining vertical order of haplotypes in plot. Options are: 'refdist' (default) = haplotypes are ordered by distance to the reference haplotype, with the reference haplotype appearing at the top of the plot and haplotype divergence increases as y decreases; 'clust' = haplotypes are clustered by using dist() and hclust(), order of clusters is arbitrary
+#' @param hap_order Method for determining vertical order of haplotypes in plot. Options are: 'refdist'
+#' (default) = haplotypes are ordered by distance to the reference haplotype, with the reference
+#' haplotype appearing at the top of the plot and haplotype divergence increasing as y decreases; 'clust'
+#'  = haplotypes are clustered by using dist() and hclust(), order of clusters is arbitrary
 #' @import dplyr
 #' @import ggnewscale
 #' @import ggplot2
@@ -25,7 +34,7 @@
 #' @import reshape2
 #' @importFrom stats hclust dist
 #' @export
-plot_pav <- function(coord_map, presence_matrix, bin_info,
+plot_pav <- function(coord_map, presence_matrix, bin_info, na_matrix = NULL,
                      output_prefix = NULL, output_fmt = 'pdf', roi = NULL,
                      ref_hap = NULL, chrom = NULL, region_start = NULL, region_end = NULL,
                      bin_size = 100, color_low = 'white', color_high = '#0F85A0FF',
@@ -86,6 +95,14 @@ plot_pav <- function(coord_map, presence_matrix, bin_info,
 
   ## Merge with bin info to get reference coordinates
   df <- merge(df, bin_info, by.x = "BinNum", by.y = "bin_num")
+
+  ## for NA matrix
+  if(!is.null('na_matrix')){
+    na.mat <- melt(na_matrix)
+    colnames(na.mat) <- c("Sample", "Bin", "Presence")
+    na.mat$BinNum <- as.numeric(gsub("Bin_", "", na.mat$Bin))
+    na.mat <- merge(na.mat, bin_info, by.x = "BinNum", by.y = "bin_num")
+  }
 
   ## Determine reasonable number of x-axis breaks
   n_breaks <- min(10, nrow(bin_info)) ## minimum of 10 or the number of bins
@@ -162,6 +179,8 @@ plot_pav <- function(coord_map, presence_matrix, bin_info,
   if(!is.null('gene_bounds')){
     n1 <- length(unique(df$Sample))+1
     colnames(gene_bounds) <- c('chr','gene.start','gene.end','gene.name')
+    gene_bounds$gene.start <- as.numeric(gene_bounds$gene.start)
+    gene_bounds$gene.end <- as.numeric(gene_bounds$gene.end)
     gene_bounds$gene.start <- gene_bounds$gene.start+1 ## convert 0-based BED to 1-based coord system used here
     gene_bounds$midpt <- (gene_bounds$gene.start + gene_bounds$gene.end)/2
     filt_gene_bounds <- gene_bounds[which(gene_bounds$gene.start >= min(bin_info$ref_start[bin_info$ref_start != 0]) &
@@ -242,6 +261,46 @@ plot_pav <- function(coord_map, presence_matrix, bin_info,
             panel.border = element_rect(color = "black", fill = NA, linewidth = 0.75),
             axis.ticks.x = element_line(color = 'black', linewidth = 0.25),
             text = element_text(color = 'black'))
+    if(exists('na.mat')){
+      p.na <- ggplot(na.mat, aes(x = .data$expanded_start, y = .data$Sample, fill = factor(.data$Presence))) +
+        geom_polygon(data = filt_gene_bounds.poly, mapping = aes(x = .data$exp.x, y = .data$y, group = .data$p),
+                     inherit.aes = FALSE,
+                     fill = gene_color, alpha = 1) +
+        geom_tile(color = NA) +
+        scale_fill_manual(values = c('0' = 'grey95', '1' = 'grey30'),
+                          labels = c('All present','>=1 site missing')) +
+        scale_x_continuous(breaks = x_breaks, labels = x_labels, expand = c(0,0)) +
+        scale_y_discrete(expand = c(0,0)) +
+        labs(title = sprintf("%s PAV", formatC(roi)),
+             subtitle = sprintf("%s %s: %s - %s",
+                                formatC(ref_hap, format = "f"),
+                                formatC(chrom, format = "f"),
+                                formatC(region_start, format = "f",
+                                        digits = 0, big.mark = ","),
+                                formatC(region_end, format = "f",
+                                        digits = 0, big.mark = ",")),
+             x = "Reference Coordinate Position",
+             y = "Sample",
+             fill = 'Bin call status') +
+        theme_minimal() +
+        ## annotate("text", x = filt_gene_bounds$exp.midpt,
+        ##          y = rep(c(n1+0.05, n1+0.1, n1+0.15), nrow(filt_gene_bounds))[1:nrow(filt_gene_bounds)],
+        ##          label = filt_gene_bounds$gene.name, size = 1) +
+        coord_cartesian(xlim = range(df$expanded_start), ylim = c(1,n1+0.1)) +
+        geom_hline(yintercept = rep(1:length(unique(df$Sample)), each = 2) - 0.5, linewidth = 0.25) +
+        ## geom_vline(xintercept = filt_gene_bounds.poly$exp.x, linewidth = 0.5, color = gene_color) +
+        theme(axis.text.y = element_markdown(face = axis_faces, color = 'black'),
+              axis.text.x = element_text(angle = 45, hjust = 1, color = 'black'),
+              panel.grid.major = element_blank(),
+              panel.grid.minor = element_blank(),
+              plot.title = element_markdown(hjust = 0.5, face = "bold"),
+              plot.subtitle = element_text(hjust = 0.5),
+              legend.position = "right",
+              legend.title = element_text(hjust = 0.5),
+              panel.border = element_rect(color = "black", fill = NA, linewidth = 0.75),
+              axis.ticks.x = element_line(color = 'black', linewidth = 0.25),
+              text = element_text(color = 'black'))
+    }
   } else{
     p <- ggplot(df, aes(x = .data$expanded_start, y = .data$Sample, fill = .data$Presence)) +
       geom_tile(color = NA) +
@@ -273,12 +332,55 @@ plot_pav <- function(coord_map, presence_matrix, bin_info,
             panel.border = element_rect(color = "black", fill = NA, linewidth = 0.75),
             axis.ticks.x = element_line(color = 'black', linewidth = 0.25),
             text = element_text(color = 'black'))
+    if(exists('na.mat')){
+      p.na <- ggplot(na.mat, aes(x = .data$expanded_start, y = .data$Sample, fill = factor(.data$Presence))) +
+        geom_tile(color = NA) +
+        scale_fill_manual(values = c('0' = 'grey95', '1' = 'grey30'),
+                          labels = c('All present','>=1 site missing')) +
+        scale_x_continuous(breaks = x_breaks, labels = x_labels, expand = c(0,0)) +
+        scale_y_discrete(expand = c(0,0)) +
+        labs(title = sprintf("%s PAV", formatC(roi)),
+             subtitle = sprintf("%s %s: %s - %s",
+                                formatC(ref_hap, format = "f"),
+                                formatC(chrom, format = "f"),
+                                formatC(region_start, format = "f",
+                                        digits = 0, big.mark = ","),
+                                formatC(region_end, format = "f",
+                                        digits = 0, big.mark = ",")),
+             x = "Reference Coordinate Position",
+             y = "Sample",
+             fill = 'Bin call status') +
+        theme_minimal() +
+        coord_cartesian(xlim = range(df$expanded_start), ylim = c(1,n1+0.1)) +
+        geom_hline(yintercept = rep(1:length(unique(df$Sample)), each = 2) - 0.5, linewidth = 0.25) +
+        theme(axis.text.y = element_markdown(face = axis_faces, color = 'black'),
+              axis.text.x = element_text(angle = 45, hjust = 1, color = 'black'),
+              panel.grid.major = element_blank(),
+              panel.grid.minor = element_blank(),
+              plot.title = element_markdown(hjust = 0.5, face = "bold"),
+              plot.subtitle = element_text(hjust = 0.5),
+              legend.position = "right",
+              legend.title = element_text(hjust = 0.5),
+              panel.border = element_rect(color = "black", fill = NA, linewidth = 0.75),
+              axis.ticks.x = element_line(color = 'black', linewidth = 0.25),
+              text = element_text(color = 'black'))
+    }
   }
   if(output_fmt %in% c('pdf', 'both')){
-    ggsave(paste0(output_prefix,'.pdf'), p, device = 'pdf', width = width, height = height, units = 'in')
+    ggsave(paste0(output_prefix,'.pdf'), p, device = 'pdf',
+           width = width, height = height, units = 'in')
+    if(exists('na.mat')){
+      ggsave(paste0(output_prefix,'-missingSite_QC.pdf'), p.na, device = 'pdf',
+             width = width, height = height, units = 'in')
+    }
   }
   if(output_fmt %in% c('tiff', 'both')){
-    ggsave(paste0(output_prefix,'.tiff'), p, device = 'tiff', width = width, height = height, units = 'in', dpi = 400)
+    ggsave(paste0(output_prefix,'.tiff'), p, device = 'tiff',
+           width = width, height = height, units = 'in', dpi = 400)
+    if(exists('na.mat')){
+      ggsave(paste0(output_prefix,'-missingSite_QC.tiff'), p.na, device = 'tiff',
+             width = width, height = height, units = 'in', dpi = 400)
+    }
   }
 
   return(p)
