@@ -84,6 +84,7 @@ calculate_bins <- function(vcf, coord_map, bin_size, start_pos, end_pos){
   ## initialize progress bar
   pb <- txtProgressBar(min = 0, max = length(samples), style = 3)
 
+  print('Calculating bins...')
   for(s in seq_along(samples)){
     setTxtProgressBar(pb, s)
     s.del.pos <- NULL
