@@ -2,12 +2,13 @@
 % Please edit documentation in R/plot_pav_hiliteInsertions.R
 \name{plot_pav_hiliteInsertions}
 \alias{plot_pav_hiliteInsertions}
-\title{Plot presence-absence matrix with reference coordinate labels}
+\title{Plot presence-absence matrix in expanded coordinate system labeled with original reference coordinates}
 \usage{
 plot_pav_hiliteInsertions(
+  coord_map,
   presence_matrix,
   bin_info,
-  ins_output_prefix,
+  output_prefix = NULL,
   output_fmt = "pdf",
   roi = NULL,
   ref_hap = NULL,
@@ -15,11 +16,11 @@ plot_pav_hiliteInsertions(
   region_start = NULL,
   region_end = NULL,
   bin_size = 100,
-  ins_thresh = 1,
   color_low = "white",
   color_high = "#0F85A0FF",
+  ins_thresh = 1,
   ins_color_low = "white",
-  ins_color_high = "#DD4124FF",
+  ins_color_high = "seagreen4",
   width = 14,
   height = 8,
   gene_bounds = NULL,
@@ -28,17 +29,21 @@ plot_pav_hiliteInsertions(
 )
 }
 \arguments{
-\item{presence_matrix}{Matrix of presence/absence proportions, calculated by calculate_bins.R}
+\item{coord_map}{Map linking expanded coordinate system to original reference coordinate system, written by build_coordsystem()}
 
-\item{bin_info}{Data frame with bin coordinate information, written by calculate_bins.R}
+\item{presence_matrix}{Matrix of presence/absence proportions, calculated by calculate_bins()}
 
-\item{ins_output_prefix}{Output plot file prefix. Default is to substitute '-PAV_INS.pdf' (and/or '-PAV_INS.tiff') for '.vcf.gz' in input VCF file name.}
+\item{bin_info}{Data frame with bin coordinate information, written by calculate_bins()}
+
+\item{output_prefix}{Output plot file prefix. If not set, will default to '[roi]_[ref_hap]_[chrom]_[region_start]_[region_end]_[bin_size]-INS_PAV'}
 
 \item{output_fmt}{File format for output plot. Options are 'pdf' (default), 'tiff', or 'both'}
 
 \item{roi}{Name of region to be plotted}
 
-\item{ref_hap}{Name of reference haplotype. Should be the name of the haplotype against which variants are described (i.e., that alignments were made against to build the input VCF) and should also be included as a sample in the input VCF.}
+\item{ref_hap}{Name of reference haplotype. Should be the name of the haplotype against which variants are
+described (i.e., that alignments were made against to build the input VCF) and should also be included as
+a sample in the input VCF.}
 
 \item{chrom}{Name of chromosome containing region to be plotted}
 
@@ -48,26 +53,32 @@ plot_pav_hiliteInsertions(
 
 \item{bin_size}{Bin size (in bases) for summarizing PAV}
 
-\item{ins_thresh}{Threshold (in bases) for the number of additional bases required in a bin, relative to the reference haplotype, to flag the bin as containing ≥1 insertion. Default = 1}
-
 \item{color_low}{Color for absence (bin presence = 0)}
 
 \item{color_high}{Color for presence (bin presence = 1)}
 
-\item{ins_color_low}{Color for absence (insertion bin presence = 0)}
+\item{ins_thresh}{Threshold (in bases) for the number of additional bases required in a bin, relative to
+the reference haplotype, to flag the bin as containing ≥1 insertion. Default = 1}
 
-\item{ins_color_high}{Color for presence (insertion bin presence = 1)}
+\item{ins_color_low}{Color for absence in bin where haplotype has more sequence than reference (bin presence = 0)}
+
+\item{ins_color_high}{Color for presence in bin where haplotype has more sequence than reference (bin presence = 1)}
 
 \item{width}{Plot width (inches)}
 
 \item{height}{Plot height (inches)}
 
-\item{gene_bounds}{Optional BED file of gene regions to be overlaid on PAV plot. Follows typical tab-delimited BED format with 4 columns: (i) chromosome, (ii) 0-based start coordinate, (iii) end coordinate, and (iv) gene name}
+\item{gene_bounds}{Optional BED file of gene regions to be overlaid on PAV plot. Follows typical
+tab-delimited BED format with 4 columns: (i) chromosome, (ii) 0-based start coordinate, (iii) end
+coordinate, and (iv) gene name [somewhat functional]}
 
-\item{gene_color}{If supplying gene regions, color of highlighting polygon}
+\item{gene_color}{If supplying gene regions, color of highlighting polygon [somewhat functional]}
 
-\item{hap_order}{Method for determining vertical order of haplotypes in plot. Options are: 'refdist' (default) = haplotypes are ordered by distance to the reference haplotype, with the reference haplotype appearing at the top of the plot and haplotype divergence increases as y decreases; 'clust' = haplotypes are clustered by using dist() and hclust(), order of clusters is arbitrary}
+\item{hap_order}{Method for determining vertical order of haplotypes in plot. Options are: 'refdist'
+(default) = haplotypes are ordered by distance to the reference haplotype, with the reference
+haplotype appearing at the top of the plot and haplotype divergence increasing as y decreases; 'clust'
+ = haplotypes are clustered by using dist() and hclust(), order of clusters is arbitrary}
 }
 \description{
-Plot presence-absence matrix with reference coordinate labels
+Plot presence-absence matrix in expanded coordinate system labeled with original reference coordinates
 }

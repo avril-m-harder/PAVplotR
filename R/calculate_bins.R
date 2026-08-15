@@ -7,6 +7,7 @@
 #' @param end_pos End position in reference coordinates
 #' @return A list with presence matrix and bin information
 #' @import vcfR
+#' @importFrom utils setTxtProgressBar txtProgressBar
 #' @export
 calculate_bins <- function(vcf, coord_map, bin_size, start_pos, end_pos){
 
@@ -80,7 +81,11 @@ calculate_bins <- function(vcf, coord_map, bin_size, start_pos, end_pos){
   colnames(missing_matrix) <- paste0("Bin_", 1:n_bins)
 
   ## For each sample, calculate presence in each bin
+  ## initialize progress bar
+  pb <- txtProgressBar(min = 0, max = length(samples), style = 3)
+
   for(s in seq_along(samples)){
+    setTxtProgressBar(pb, s)
     s.del.pos <- NULL
     sample_name <- samples[s]
 
@@ -89,7 +94,8 @@ calculate_bins <- function(vcf, coord_map, bin_size, start_pos, end_pos){
     ## Track which positions are NA
     missing_positions <- rep(FALSE, max_expanded)
 
-    ## Initially, all reference positions are present (positions not spanned by any variants in the VCF)
+    ## Initially, all reference positions are present
+    ## (i.e., positions not spanned by any variants in the VCF)
     for(i in 1:nrow(coord_map)){
       if(coord_map$variant_type[i] == "ref"){
         present_positions[coord_map$expanded_pos[i]] <- TRUE
@@ -98,9 +104,9 @@ calculate_bins <- function(vcf, coord_map, bin_size, start_pos, end_pos){
 
     ## Process each variant in the region (positions_region == positions of all variants in the region)
     for(v in seq_along(positions_region)){
+      # plot(present_positions, main = paste0(sample_name,'\nbefore ',v)) ## troubleshooting plot
       genotype <- gt_region[v, s]
 
-      ##### !! figure out this missing_matrix all the way thru #####
       ## Record missing genotypes separately for QC - just the ref position information
       if(is.na(genotype) || genotype == "." || genotype == "./."){
         ref_pos <- positions_region[v]
@@ -120,19 +126,19 @@ calculate_bins <- function(vcf, coord_map, bin_size, start_pos, end_pos){
       # alt_alleles <- strsplit(alts_region[v], ",")[[1]] ## multiallelic records
       all_alleles <- c(ref_allele, alt_allele)
 
-      ## Find corresponding position in coord_map
+      ## Find corresponding expanded position in coord_map
       map_idx <- which(coord_map$ref_pos == ref_pos)[1]
 
-      if(is.na(map_idx)) next
+      # if(is.na(map_idx)) next
 
       expanded_start <- coord_map$expanded_pos[map_idx]
       max_len <- coord_map$max_length[map_idx]
 
-      ## For each allele in genotype, mark presence
+      ## For allele in haplotype, mark presence
       for(allele_idx in allele){
         if(is.na(allele_idx)) next
 
-        ## Get the actual allele sequence (0 = ref, 1+ = alt)
+        ## Get the actual allele sequence in the focal hap (0 = ref, 1+ = alt)
         if(allele_idx == 0){
           allele_seq <- ref_allele
           var.type <- 'ref'
@@ -149,21 +155,35 @@ calculate_bins <- function(vcf, coord_map, bin_size, start_pos, end_pos){
 
         allele_len <- nchar(allele_seq)
 
-        ##### added accounting for deletions == absence of locus
         ## Mark positions as present for this allele
-        if(var.type %in% c('ins','snp','ref')){
+        ## If it's ref/snp/mnp, record presence in the reference coordinate system
+        ## (translated to the expanded coordinate system)
+        if(var.type %in% c('snp','ref')){
+          for(offset in 0:(allele_len - 1)){
+            pos <- ref_pos + offset
+            exp.pos <- coord_map[coord_map$ref_pos == pos, 2]
+            if(exp.pos <= max_expanded){
+              present_positions[exp.pos] <- TRUE
+            }
+          }
+        ## If it's an insertion, record presence in the expanded coordinate system
+        }else if(var.type == 'ins'){
           for(offset in 0:(allele_len - 1)){
             pos <- expanded_start + offset
             if(pos <= max_expanded){
               present_positions[pos] <- TRUE
             }
           }
+        ## If it's a deletion, save its positions in the reference coordinate system
+        ## (translated to the expanded coordinate system) to s.del.pos and overlay at
+        ## the end
         } else if(var.type == 'del'){
           for(offset in 0:(nchar(ref_allele) - 1)){
-            pos <- expanded_start + offset
-            if(pos <= max_expanded){
-              s.del.pos <- c(s.del.pos, pos) ### save it instead and overlay at the end
-              ## present_positions[pos] <- FALSE
+
+            pos <- ref_pos + offset
+            exp.pos <- coord_map[coord_map$ref_pos == pos, 2]
+            if(exp.pos <= max_expanded){
+              s.del.pos <- c(s.del.pos, exp.pos)
             }
           }
         }
@@ -200,6 +220,7 @@ calculate_bins <- function(vcf, coord_map, bin_size, start_pos, end_pos){
       }
     }
   }
+  close(pb)
 
   ## Create bin info dataframe
   bin_info <- data.frame(

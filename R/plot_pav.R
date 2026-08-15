@@ -5,7 +5,7 @@
 #' @param bin_info Data frame with bin coordinate information, written by calculate_bins()
 #' @param na_matrix Matrix indicating bins that contain at least one NA call (= '1'), calculated by
 #' calculate_bins() for QC purposes
-#' @param output_prefix Output plot file prefix. If not set, will default to '[roi]_[ref_hap]_[chrom]_[region_start]_[region_end]_[bin_size]'
+#' @param output_prefix Output plot file prefix. If not set, will default to '[roi]_[ref_hap]_[chrom]_[region_start]_[region_end]_[bin_size]_PAV'
 #' @param output_fmt File format for output plot. Options are 'pdf' (default), 'tiff', or 'both'
 #' @param roi Name of region to be plotted
 #' @param ref_hap Name of reference haplotype. Should be the name of the haplotype against which variants are
@@ -68,7 +68,7 @@ plot_pav <- function(coord_map, presence_matrix, bin_info, na_matrix = NULL,
   }
 
   if(is.null(output_prefix)){
-    output_prefix <- paste0(roi,'_',ref_hap,'_',chrom,'_',region_start,'_',region_end,'_',bin_size)
+    output_prefix <- paste0(roi,'_',ref_hap,'_',chrom,'_',region_start,'_',region_end,'_',bin_size,'_PAV')
   }
 
   if(hap_order == 'refdist'){
@@ -78,12 +78,18 @@ plot_pav <- function(coord_map, presence_matrix, bin_info, na_matrix = NULL,
     ref.dists <- mat.dists[ref_hap,]
     ord.ind <- rev(order(ref.dists))
     presence_matrix <- presence_matrix[ord.ind,]
+    if(!is.null(na_matrix)){
+      na_matrix <- na_matrix[ord.ind,]
+    }
   } else if(hap_order == 'clust'){
     ## cluster rows of matrix by similarity and reorder matrix to match that clustering
     row.dists <- dist(presence_matrix)
     row.clust <- hclust(row.dists, method = 'average')
     ord.ind <- row.clust$order
     presence_matrix <- presence_matrix[ord.ind,]
+    if(!is.null(na_matrix)){
+      na_matrix <- na_matrix[ord.ind,]
+    }
   }
 
   ## Convert to long format for ggplot
@@ -95,9 +101,12 @@ plot_pav <- function(coord_map, presence_matrix, bin_info, na_matrix = NULL,
 
   ## Merge with bin info to get reference coordinates
   df <- merge(df, bin_info, by.x = "BinNum", by.y = "bin_num")
+  if(hap_order == 'refdist'){ ## set levels so that ref_hap is always plotted at the top
+    df$Sample <- factor(df$Sample, levels = c(setdiff(levels(df$Sample), ref_hap), ref_hap))
+  }
 
   ## for NA matrix
-  if(!is.null('na_matrix')){
+  if(!is.null(na_matrix)){
     na.mat <- melt(na_matrix)
     colnames(na.mat) <- c("Sample", "Bin", "Presence")
     na.mat$BinNum <- as.numeric(gsub("Bin_", "", na.mat$Bin))
@@ -176,8 +185,8 @@ plot_pav <- function(coord_map, presence_matrix, bin_info, na_matrix = NULL,
   }
 
   ## If supplied, convert gene bounds into expanded coordinate space
-  if(!is.null('gene_bounds')){
-    n1 <- length(unique(df$Sample))+1
+  n1 <- length(unique(df$Sample))+1
+  if(!is.null(gene_bounds)){
     colnames(gene_bounds) <- c('chr','gene.start','gene.end','gene.name')
     gene_bounds$gene.start <- as.numeric(gene_bounds$gene.start)
     gene_bounds$gene.end <- as.numeric(gene_bounds$gene.end)
@@ -351,7 +360,6 @@ plot_pav <- function(coord_map, presence_matrix, bin_info, na_matrix = NULL,
              y = "Sample",
              fill = 'Bin call status') +
         theme_minimal() +
-        coord_cartesian(xlim = range(df$expanded_start), ylim = c(1,n1+0.1)) +
         geom_hline(yintercept = rep(1:length(unique(df$Sample)), each = 2) - 0.5, linewidth = 0.25) +
         theme(axis.text.y = element_markdown(face = axis_faces, color = 'black'),
               axis.text.x = element_text(angle = 45, hjust = 1, color = 'black'),

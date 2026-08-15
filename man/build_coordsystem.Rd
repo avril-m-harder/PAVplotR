@@ -4,7 +4,12 @@
 \alias{build_coordsystem}
 \title{Build expanded coordinate system accounting for all alleles}
 \usage{
-build_coordsystem(vcf, start_pos = NULL, end_pos = NULL)
+build_coordsystem(
+  vcf,
+  start_pos = NULL,
+  end_pos = NULL,
+  var_handling = "collapsed"
+)
 }
 \arguments{
 \item{vcf}{A vcfR object containing haploid calls, including for the reference haplotype}
@@ -12,6 +17,12 @@ build_coordsystem(vcf, start_pos = NULL, end_pos = NULL)
 \item{start_pos}{Start position in reference coordinates (NULL for beginning)}
 
 \item{end_pos}{End position in reference coordinates (NULL for end)}
+
+\item{var_handling}{How to handle expanded coordinate system when there are >1 distinct alleles at a single locus.
+Options are: 'collapsed' (default) = all SV alleles begin at the same recorded REF position *and* expanded
+coordinate position (e.g., all deletion and insertion alleles will be vertically stacked, regardless of allelic
+type/identity); 'expanded' = each SV allele (i.e., VCF record) receives its own expanded coordinate start position
+(still not sure how best to implement this, so not currently available)}
 }
 \value{
 A data frame with mapping between reference and expanded coordinates

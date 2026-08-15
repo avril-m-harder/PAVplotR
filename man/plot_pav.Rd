@@ -36,7 +36,7 @@ plot_pav(
 \item{na_matrix}{Matrix indicating bins that contain at least one NA call (= '1'), calculated by
 calculate_bins() for QC purposes}
 
-\item{output_prefix}{Output plot file prefix. If not set, will default to '[roi]_[ref_hap]_[chrom]_[region_start]_[region_end]_[bin_size]'}
+\item{output_prefix}{Output plot file prefix. If not set, will default to '[roi]_[ref_hap]_[chrom]_[region_start]_[region_end]_[bin_size]_PAV'}
 
 \item{output_fmt}{File format for output plot. Options are 'pdf' (default), 'tiff', or 'both'}
 
