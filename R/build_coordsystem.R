@@ -74,10 +74,10 @@ build_coordsystem <- function(vcf, start_pos = NULL, end_pos = NULL, var_handlin
     ref_alleles <- refs[var.idx]
     alt_alleles <- alts[var.idx]
 
-    ## probably don't need this check? ope, we do.
-    # if(substr(ref_allele, 1, 1) != substr(alt_allele, 1, 1)){
-    #   stop('Check VCF formatting - first nucleotide not identical between REF / ALT allele')
-    # }
+    # probably don't need this check? ope, we do.
+    if(substr(ref_allele, 1, 1) != substr(alt_allele, 1, 1)){
+      warning(paste0('Check VCF formatting - first nucleotide not identical between REF / ALT allele at position ',i))
+    }
 
     ## Add intervening reference positions if moving more than 1 base position (i.e., not processing
     ## another allele at the same locus just processed or at the subsequent position)
