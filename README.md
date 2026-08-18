@@ -12,12 +12,15 @@ Converting multi-haplotype graphs to VCF format can sometimes produce unexpected
 
 ### 2. Installing and dependencies
 
-Running `remotes::install_github('avril-m-harder/PAVplotR')` will install `PAVplotR` and required dependencies if not already installed: `vcfR`, `ggplot2`, `reshape2`, `dplyr`, `ggnewscale`, and `ggtext`.
+Installing `pak` and running `pak::pak('avril-m-harder/PAVplotR')` will install `PAVplotR` and required dependencies if not already installed (`vcfR`, `ggplot2`, `reshape2`, `dplyr`, `ggnewscale`, and `ggtext`).
 
 ### 3. Testing it with example data
 The below steps will produce 2 plots for a simplified view of the [SHATTERING1 locus](https://www.nature.com/articles/s41586-026-10229-9/figures/3) in 33 sorghum haplotypes[^1].
 
+First, install PAVplotR, load necessary libraries, and set the minimum information required to plot a region of interest, including the bin size for which you'd like to calculate proportional PAV.
 ```
+pak::pak('avril-m-harder/PAVplotR')
+
 library(PAVplotR)
 library(vcfR)
 library(ggplot2)
@@ -26,14 +29,20 @@ library(dplyr)
 library(ggnewscale)
 library(ggtext)
 
-## provide minimum information on the region of interest
+## provide minimum information on the ROI
 start.pos <- 12398577
 end.pos <- 12404976
 ref <- 'BTx623'
 roi <- 'SH1'
 chr <- 'Chr01'
 
+## set bin size for calculating PAV proportions
 bin.size <- 100
+```
+
+Using built-in example data, calculate the extended coordinate system to accommodate insertions relative to the reference haplotype with `build_coordsystem()`. Currently, all variants occurring at the same reference coordinate position will be vertically stacked. For example, for 2 distinct insertions and 1 deletion at the same locus, the 2 insertions will be stacked and accounted for with extended coordinates, whereas the deletion will be visualized just following these two insertions where the reference coordinate system picks back up. Calculate PAV bins for each haplotype with `calculate_bins()`.
+```
+vcf <- PAVplotR::example_vcf
 
 coord.map <- build_coordsystem(vcf,
                                start_pos = start.pos,
@@ -44,7 +53,9 @@ bin.dat <- calculate_bins(vcf,
                           bin_size = bin.size,
                           start_pos = start.pos,
                           end_pos = end.pos)
-
+```
+The first plot produced with `plot_pav()` will plot simple presence-absence for the ROI.
+```
 plot_pav(coord_map = coord.map,
          presence_matrix = bin.dat$matrix,
          bin_info = bin.dat$bin_info,
@@ -57,7 +68,9 @@ plot_pav(coord_map = coord.map,
          bin_size = bin.size,
          hap_order = 'refdist',
          width = 8, height = 5)
-
+```
+The second plot produced with `plot_pav_hiliteInsertions()` will plot the same presence-absence information for the ROI, but will highlight insertions relative to the reference. A threshold for highlighting bins containing insertions can be specified with `ins_thresh` (the number of additional bases in a bin, relative to the reference haplotype, to flag the haplotype and bin as containing ≥1 insertion).
+```
 plot_pav_hiliteInsertions(coord_map = coord.map,
                           presence_matrix = bin.dat$matrix,
                           bin_info = bin.dat$bin_info,
