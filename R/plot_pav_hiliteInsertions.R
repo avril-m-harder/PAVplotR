@@ -72,7 +72,7 @@ plot_pav_hiliteInsertions <- function(coord_map, presence_matrix, bin_info,
   }
 
   if(is.null(output_prefix)){
-    output_prefix <- paste0(roi,'_',ref_hap,'_',chrom,'_',region_start,'_',region_end,'_',bin_size)
+    output_prefix <- paste0(roi,'_',ref_hap,'_',chrom,'_',region_start,'_',region_end,'_',bin_size,'_INS_PAV')
   }
 
   if(hap_order == 'refdist'){
@@ -243,13 +243,13 @@ plot_pav_hiliteInsertions <- function(coord_map, presence_matrix, bin_info,
       geom_tile(data = df %>% filter(.data$seq.type == "ref"),
                 aes(fill = .data$Presence),
                 color = NA, width = bin_size) +
-      scale_fill_continuous(name = "Presence (ref)", limits = c(0,1),
+      scale_fill_continuous(name = "Proportion\npresent\n(reference)\n", limits = c(0,1),
                             low = color_low, high = color_high) +
       new_scale_fill() +
       geom_tile(data = df %>% filter(.data$seq.type == "ins"),
                 aes(fill = .data$Presence),
                 color = NA, width = bin_size) +
-      scale_fill_continuous(name = "Presence (ins)", limits = c(0,1),
+      scale_fill_continuous(name = "Proportion\npresent\n(insertions)\n", limits = c(0,1),
                             low = ins_color_low, high = ins_color_high) +
       scale_x_continuous(breaks = x_breaks, labels = x_labels, expand = c(0,0)) +
       scale_y_discrete(expand = c(0,0)) +
@@ -286,13 +286,13 @@ plot_pav_hiliteInsertions <- function(coord_map, presence_matrix, bin_info,
       geom_tile(data = df %>% filter(.data$seq.type == "ref"),
                 aes(fill = .data$Presence),
                 color = NA, width = bin_size) +
-      scale_fill_continuous(name = "Presence (ref)", limits = c(0,1),
+      scale_fill_continuous(name = "Proportion\npresent\n(reference)\n", limits = c(0,1),
                             low = color_low, high = color_high) +
       new_scale_fill() +
       geom_tile(data = df %>% filter(.data$seq.type == "ins"),
                 aes(fill = .data$Presence),
                 color = NA, width = bin_size) +
-      scale_fill_continuous(name = "Presence (ins)", limits = c(0,1),
+      scale_fill_continuous(name = "Proportion\npresent\n(insertions)\n", limits = c(0,1),
                             low = ins_color_low, high = ins_color_high) +
       scale_x_continuous(breaks = x_breaks, labels = x_labels, expand = c(0,0)) +
       scale_y_discrete(expand = c(0,0)) +

@@ -238,7 +238,7 @@ plot_pav <- function(coord_map, presence_matrix, bin_info, na_matrix = NULL,
                    fill = gene_color, alpha = 1) +
       geom_tile(color = NA) +
       scale_fill_gradient(low = color_low, high = color_high,
-                          name = "Proportion\nPresent",
+                          name = "Proportion\npresent",
                           limits = c(0, 1)) +
       scale_x_continuous(breaks = x_breaks, labels = x_labels, expand = c(0,0)) +
       scale_y_discrete(expand = c(0,0)) +
@@ -314,7 +314,7 @@ plot_pav <- function(coord_map, presence_matrix, bin_info, na_matrix = NULL,
     p <- ggplot(df, aes(x = .data$expanded_start, y = .data$Sample, fill = .data$Presence)) +
       geom_tile(color = NA) +
       scale_fill_gradient(low = color_low, high = color_high,
-                          name = "Proportion\nPresent",
+                          name = "Proportion\npresent",
                           limits = c(0, 1)) +
       scale_x_continuous(breaks = x_breaks, labels = x_labels, expand = c(0,0)) +
       scale_y_discrete(expand = c(0,0)) +
