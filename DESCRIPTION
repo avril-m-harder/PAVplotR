@@ -16,3 +16,5 @@ Imports:
     ggtext,
     reshape2,
     vcfR
+Depends: 
+    R (>= 3.5)

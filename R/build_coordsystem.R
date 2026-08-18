@@ -64,10 +64,6 @@ build_coordsystem <- function(vcf, start_pos = NULL, end_pos = NULL, var_handlin
   expanded_pos <- 1   ## expanded coordinate system starts at 1 (exp 1 == ref start_pos)
   last_ref_pos <- start_pos - 1
 
-  # for (i in seq_along(positions)) {
-
-  ## troubleshooting
-  # i <- unique(positions)[3]
   for(i in unique(positions)){ ## instead of processing variants sequentially, process within each REF position sequentially
     ref_pos <- i
     var.idx <- which(positions == i) ## get indices (== VCF row nums) for variants at this reference position
@@ -75,7 +71,7 @@ build_coordsystem <- function(vcf, start_pos = NULL, end_pos = NULL, var_handlin
     alt_alleles <- alts[var.idx]
 
     # probably don't need this check? ope, we do.
-    if(substr(ref_allele, 1, 1) != substr(alt_allele, 1, 1)){
+    if(substr(ref_alleles[1], 1, 1) != substr(alt_alleles[1], 1, 1)){
       warning(paste0('Check VCF formatting - first nucleotide not identical between REF / ALT allele at position ',i))
     }
 
@@ -122,14 +118,6 @@ build_coordsystem <- function(vcf, start_pos = NULL, end_pos = NULL, var_handlin
                 length(alt_alleles) == 1 & length(ref_alleles) == 1){
         var_type <- 'mnp'
       }
-
-      ## original, only placement for this set of lines
-      # coord_map <- rbind(coord_map, data.frame(
-      #   ref_pos = ref_pos,
-      #   expanded_pos = expanded_pos,
-      #   variant_type = var_type,
-      #   max_length = max_alt_len
-      # ))
 
       if(var_type == 'del'){
         ## deletions don't expand the coord system
@@ -213,5 +201,5 @@ build_coordsystem <- function(vcf, start_pos = NULL, end_pos = NULL, var_handlin
   }
 
   return(coord_map)
-  # plot(coord_map$ref_pos, coord_map$expanded_pos) ## QC plot
+  # plot(coord_map$ref_pos, coord_map$expanded_pos) ## QC check plot
 }
