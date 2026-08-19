@@ -11,11 +11,13 @@ All you need is a haploid VCF (e.g., output from *vg deconstruct* or *SyRI* with
 
 Converting multi-haplotype graphs to VCF format can sometimes produce unexpected results. For regions with complex variants, I would recommend comparing PAV output against dotplots of the original input haplotypes to check for inconsistencies.
 
+##
 
 ### 2. Installing and dependencies
 
 Installing `pak` and running `pak::pak('avril-m-harder/PAVplotR')` will install `PAVplotR` and required dependencies if not already installed (`vcfR`, `ggplot2`, `reshape2`, `dplyr`, `ggnewscale`, and `ggtext`).
 
+##
 
 ### 3. Testing it with example data
 The below steps will produce 2 plots for a simplified view of the [SHATTERING1 locus](https://www.nature.com/articles/s41586-026-10229-9/figures/3) in 33 sorghum haplotypes[^1].
@@ -79,6 +81,7 @@ plot_pav(coord_map = coord.map,
 
 ![basic PAV plot](https://github.com/avril-m-harder/PAVplotR/blob/main/man/figures/SH1_BTx623_Chr01_12398577_12404976_100_PAV.jpg)
 
+##
 
 The second plot produced with `plot_pav_hiliteInsertions()` will plot the same presence-absence information for the ROI, but will highlight insertions relative to the reference. A threshold for highlighting bins containing insertions can be specified with `ins_thresh` (the number of additional bases in a bin, relative to the reference haplotype, to flag the haplotype and bin as containing ≥1 insertion).
 
