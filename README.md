@@ -69,6 +69,8 @@ plot_pav(coord_map = coord.map,
          hap_order = 'refdist',
          width = 8, height = 5)
 ```
+![basic PAV plot](https://github.com/avril-m-harder/PAVplotR/blob/main/man/figures/SH1_BTx623_Chr01_12398577_12404976_100_PAV.tiff)
+
 The second plot produced with `plot_pav_hiliteInsertions()` will plot the same presence-absence information for the ROI, but will highlight insertions relative to the reference. A threshold for highlighting bins containing insertions can be specified with `ins_thresh` (the number of additional bases in a bin, relative to the reference haplotype, to flag the haplotype and bin as containing ≥1 insertion).
 ```
 plot_pav_hiliteInsertions(coord_map = coord.map,
