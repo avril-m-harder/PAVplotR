@@ -19,7 +19,7 @@ Installing `pak` and running `pak::pak('avril-m-harder/PAVplotR')` will install 
 
 ##
 
-### 3. Testing it with example data
+### 3. Testing with example data
 The below steps will produce 2 plots for a simplified view of the [SHATTERING1 locus](https://www.nature.com/articles/s41586-026-10229-9/figures/3) in 33 sorghum haplotypes[^1].
 
 First, install PAVplotR, load necessary libraries, and set the minimum information required to plot a region of interest, including the bin size for which you'd like to calculate proportional PAV.
