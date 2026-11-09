@@ -188,6 +188,17 @@ plot_pav_hiliteInsertions <- function(coord_map, presence_matrix, bin_info,
     }
   }
 
+  ## Format a reasonable legend title
+  if(bin_size < 1000){
+    bin.lab <- paste0(bin_size,'-base')
+  }
+  if(bin_size >= 1000 & bin_size < 1e6){
+    bin.lab <- paste0(bin_size/1e3,'-kb')
+  }
+  if(bin_size >= 1e6){
+    bin.lab <- paste0(bin_size/1e6,'-Mb')
+  }
+
   ## If supplied, convert gene bounds into expanded coordinate space
   n1 <- length(unique(df$Sample))+1
   if(!is.null(gene_bounds)){
@@ -243,13 +254,15 @@ plot_pav_hiliteInsertions <- function(coord_map, presence_matrix, bin_info,
       geom_tile(data = df %>% filter(.data$seq.type == "ref"),
                 aes(fill = .data$Presence),
                 color = NA, width = bin_size) +
-      scale_fill_continuous(name = "Proportion\npresent\n(reference)\n", limits = c(0,1),
+      scale_fill_continuous(name = paste0("PAV:\n",bin.lab,' bins'),
+                            limits = c(0,1),
                             low = color_low, high = color_high) +
       new_scale_fill() +
       geom_tile(data = df %>% filter(.data$seq.type == "ins"),
                 aes(fill = .data$Presence),
                 color = NA, width = bin_size) +
-      scale_fill_continuous(name = "Proportion\npresent\n(insertions)\n", limits = c(0,1),
+      scale_fill_continuous(name = paste0("Insertion PAV:\n",bin.lab,' bins'),
+                            limits = c(0,1),
                             low = ins_color_low, high = ins_color_high) +
       scale_x_continuous(breaks = x_breaks, labels = x_labels, expand = c(0,0)) +
       scale_y_discrete(expand = c(0,0)) +
@@ -270,14 +283,17 @@ plot_pav_hiliteInsertions <- function(coord_map, presence_matrix, bin_info,
       coord_cartesian(xlim = range(df$expanded_start), ylim = c(1,n1+0.1)) +
       geom_hline(yintercept = rep(1:length(unique(df$Sample)), each = 2) - 0.5, linewidth = 0.25) +
       ## geom_vline(xintercept = filt_gene_bounds.poly$exp.x, linewidth = 0.5, color = gene_color) +
-      theme(axis.text.y = element_markdown(face = axis_faces, color = 'black'),
+      theme(axis.title.x = element_text(margin = margin(t = 15)),
+            axis.title.y = element_text(margin = margin(r = 15)),
+            axis.text.y = element_markdown(face = axis_faces, color = 'black'),
             axis.text.x = element_text(angle = 45, hjust = 1, color = 'black'),
             panel.grid.major = element_blank(),
             panel.grid.minor = element_blank(),
             plot.title = element_markdown(hjust = 0.5, face = "bold"),
             plot.subtitle = element_text(hjust = 0.5),
             legend.position = "right",
-            legend.title = element_text(hjust = 0.5),
+            legend.title = element_text(hjust = 0.5, margin = margin(b = 20)),
+            legend.spacing.y = unit(40, "pt"),
             panel.border = element_rect(color = "black", fill = NA, linewidth = 0.75),
             axis.ticks.x = element_line(color = 'black', linewidth = 0.25),
             text = element_text(color = 'black'))
@@ -286,13 +302,15 @@ plot_pav_hiliteInsertions <- function(coord_map, presence_matrix, bin_info,
       geom_tile(data = df %>% filter(.data$seq.type == "ref"),
                 aes(fill = .data$Presence),
                 color = NA, width = bin_size) +
-      scale_fill_continuous(name = "Proportion\npresent\n(reference)\n", limits = c(0,1),
+      scale_fill_continuous(name = paste0("PAV:\n",bin.lab,' bins'),
+                            limits = c(0,1),
                             low = color_low, high = color_high) +
       new_scale_fill() +
       geom_tile(data = df %>% filter(.data$seq.type == "ins"),
                 aes(fill = .data$Presence),
                 color = NA, width = bin_size) +
-      scale_fill_continuous(name = "Proportion\npresent\n(insertions)\n", limits = c(0,1),
+      scale_fill_continuous(name = paste0("Insertion PAV:\n",bin.lab,' bins'),
+                            limits = c(0,1),
                             low = ins_color_low, high = ins_color_high) +
       scale_x_continuous(breaks = x_breaks, labels = x_labels, expand = c(0,0)) +
       scale_y_discrete(expand = c(0,0)) +
@@ -308,14 +326,17 @@ plot_pav_hiliteInsertions <- function(coord_map, presence_matrix, bin_info,
            y = "Sample") +
       theme_minimal() +
       geom_hline(yintercept = rep(1:length(unique(df$Sample)), each = 2) - 0.5, linewidth = 0.25) +
-      theme(axis.text.y = element_markdown(face = axis_faces, color = 'black'),
+      theme(axis.title.x = element_text(margin = margin(t = 15)),
+            axis.title.y = element_text(margin = margin(r = 15)),
+            axis.text.y = element_markdown(face = axis_faces, color = 'black'),
             axis.text.x = element_text(angle = 45, hjust = 1, color = 'black'),
             panel.grid.major = element_blank(),
             panel.grid.minor = element_blank(),
             plot.title = element_markdown(hjust = 0.5, face = "bold"),
             plot.subtitle = element_text(hjust = 0.5),
             legend.position = "right",
-            legend.title = element_text(hjust = 0.5),
+            legend.title = element_text(hjust = 0.5, margin = margin(b = 20)),
+            legend.spacing.y = unit(40, "pt"),
             panel.border = element_rect(color = "black", fill = NA, linewidth = 0.75),
             axis.ticks.x = element_line(color = 'black', linewidth = 0.25),
             text = element_text(color = 'black'))
