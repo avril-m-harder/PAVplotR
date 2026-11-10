@@ -8,7 +8,12 @@ build_coordsystem(
   vcf,
   start_pos = NULL,
   end_pos = NULL,
-  var_handling = "collapsed"
+  var_handling = "collapsed",
+  store_int = FALSE,
+  roi = NULL,
+  region_start = NULL,
+  region_end = NULL,
+  bin_size = NULL
 )
 }
 \arguments{
@@ -23,6 +28,10 @@ Options are: 'collapsed' (default) = all SV alleles begin at the same recorded R
 coordinate position (e.g., all deletion and insertion alleles will be vertically stacked, regardless of allelic
 type/identity); 'expanded' = each SV allele (i.e., VCF record) receives its own expanded coordinate start position
 (still not sure how best to implement this, so not currently available)}
+
+\item{store_int}{Write expanded coordinate map to a file in ./tmp_PAVplotR/ for retrieval after calculating (default = FALSE)}
+
+\item{roi}{Name of region to be plotted; required if store_int = TRUE}
 }
 \value{
 A data frame with mapping between reference and expanded coordinates

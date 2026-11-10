@@ -8,7 +8,6 @@ Description: Takes a haploid VCF and plots sequence PAV in the extended coordina
 Encoding: UTF-8
 License: GPL-2
 LazyData: true
-RoxygenNote: 7.3.3
 Imports: 
     dplyr,
     ggnewscale,
@@ -18,3 +17,4 @@ Imports:
     vcfR
 Depends: 
     R (>= 3.5)
+Config/roxygen2/version: 8.1.1

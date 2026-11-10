@@ -8,10 +8,13 @@
 #' coordinate position (e.g., all deletion and insertion alleles will be vertically stacked, regardless of allelic
 #' type/identity); 'expanded' = each SV allele (i.e., VCF record) receives its own expanded coordinate start position
 #' (still not sure how best to implement this, so not currently available)
+#' @param store_int Write expanded coordinate map to a file in ./tmp_PAVplotR/ for retrieval after calculating (default = FALSE)
+#' @param roi Name of region to be plotted; required if store_int = TRUE
 #' @return A data frame with mapping between reference and expanded coordinates
 #' @import vcfR
 #' @export
-build_coordsystem <- function(vcf, start_pos = NULL, end_pos = NULL, var_handling = 'collapsed') {
+build_coordsystem <- function(vcf, start_pos = NULL, end_pos = NULL, var_handling = 'collapsed', store_int = FALSE,
+                              roi = NULL, region_start = NULL, region_end = NULL, bin_size = NULL) {
 
   if(missing(vcf)){
     stop("Must specify 'vcf': a vcfR object")
@@ -21,6 +24,22 @@ build_coordsystem <- function(vcf, start_pos = NULL, end_pos = NULL, var_handlin
   }
   if(missing(end_pos)){
     stop("Must specify 'end_pos' for region to be plotted")
+  }
+
+  ## Create /tmp/ for storing key if doesn't exist
+  if(isTRUE(store_int)){
+    dir.create('./tmp_PAVplotR/', showWarnings = FALSE)
+    if(isTRUE(store_int) && (is.null(roi))) {
+      stop("If writing tmp coordinate map file, must specify roi (ROI name)")
+    }
+    out_tmp_fn <- paste0('tmp_PAVplotR/',roi,'.',start_pos,'.',end_pos,'.txt')
+  }
+
+  ## Check if coord map has already been calculated and read in if so
+  if(file.exists(out_tmp_fn)){
+    message("Coordinate map found. Reading...")
+    coord_map <- read.table(out_tmp_fn)
+    return(coord_map)
   }
 
   ## Extract positions and alleles
@@ -200,6 +219,11 @@ build_coordsystem <- function(vcf, start_pos = NULL, end_pos = NULL, var_handlin
     expanded_pos <- max(coord_map$expanded_pos) + 1
   }
 
+  if(isTRUE(store_int)){
+    write.table(coord_map, out_tmp_fn,
+                quote = FALSE, row.names = FALSE, sep = '\t')
+  }
+
   return(coord_map)
-  # plot(coord_map$ref_pos, coord_map$expanded_pos) ## QC check plot
+  # plot(coord_map$ref_pos, coord_map$expanded_pos) ## QC check
 }
