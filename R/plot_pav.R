@@ -195,6 +195,15 @@ plot_pav <- function(coord_map, presence_matrix, bin_info, na_matrix = NULL,
     bin.lab <- paste0(bin_size/1e6,'-Mb')
   }
 
+  ## reasonable title/label margins
+  if(nchar(region_end)< 5){
+    st_mar <- 10
+    tick_lab_mar <- -8
+  }else{
+    st_mar <- 30
+    tick_lab_mar <- -30
+  }
+
   ## If supplied, convert gene bounds into expanded coordinate space
   n1 <- length(unique(df$Sample))+1
   if(!is.null(gene_bounds)){
@@ -251,7 +260,7 @@ plot_pav <- function(coord_map, presence_matrix, bin_info, na_matrix = NULL,
       scale_fill_gradient(low = color_low, high = color_high,
                           name = paste0("PAV:\n",bin.lab,' bins'),
                           limits = c(0, 1)) +
-      scale_x_continuous(breaks = x_breaks, labels = x_labels, expand = c(0,0)) +
+      scale_x_continuous(breaks = x_breaks, labels = x_labels, expand = c(0,0), position = 'top') +
       scale_y_discrete(expand = c(0,0)) +
       labs(title = sprintf("%s PAV", formatC(roi)),
            subtitle = sprintf("%s %s: %s - %s",
@@ -261,7 +270,7 @@ plot_pav <- function(coord_map, presence_matrix, bin_info, na_matrix = NULL,
                                       digits = 0, big.mark = ","),
                               formatC(region_end, format = "f",
                                       digits = 0, big.mark = ",")),
-           x = "Reference Coordinate Position",
+           x = "",
            y = "Sample") +
       theme_minimal() +
       ## annotate("text", x = filt_gene_bounds$exp.midpt,
@@ -270,18 +279,18 @@ plot_pav <- function(coord_map, presence_matrix, bin_info, na_matrix = NULL,
       coord_cartesian(xlim = range(df$expanded_start), ylim = c(1,n1+0.1)) +
       geom_hline(yintercept = rep(1:length(unique(df$Sample)), each = 2) - 0.5, linewidth = 0.25) +
       ## geom_vline(xintercept = filt_gene_bounds.poly$exp.x, linewidth = 0.5, color = gene_color) +
-      theme(axis.title.x = element_text(margin = margin(t = 15)),
+      theme(axis.title.x.top = element_text(margin = margin(b = 0)),
             axis.title.y = element_text(margin = margin(r = 15)),
             axis.text.y = element_markdown(face = axis_faces, color = 'black'),
-            axis.text.x = element_text(angle = 45, hjust = 1, color = 'black'),
+            axis.text.x.top = element_text(angle = 45, hjust = 0, color = 'black', margin = margin(b = tick_lab_mar)),
             panel.grid.major = element_blank(),
             panel.grid.minor = element_blank(),
-            plot.title = element_markdown(hjust = 0.5, face = "bold"),
-            plot.subtitle = element_text(hjust = 0.5),
+            plot.title = element_markdown(hjust = 0.5, face = "bold", margin = margin(b = 10)),
+            plot.subtitle = element_text(hjust = 0.5, margin = margin(b = st_mar)),
             legend.position = "right",
             legend.title = element_text(hjust = 0.5, margin = margin(b = 20)),
             panel.border = element_rect(color = "black", fill = NA, linewidth = 0.75),
-            axis.ticks.x = element_line(color = 'black', linewidth = 0.25),
+            axis.ticks.x.top = element_line(color = 'black', linewidth = 0.25),
             text = element_text(color = 'black'))
     if(exists('na.mat')){
       p.na <- ggplot(na.mat, aes(x = .data$expanded_start, y = .data$Sample, fill = factor(.data$Presence))) +
@@ -291,7 +300,7 @@ plot_pav <- function(coord_map, presence_matrix, bin_info, na_matrix = NULL,
         geom_tile(color = NA) +
         scale_fill_manual(values = c('0' = 'grey95', '1' = 'grey30'),
                           labels = c('All present','>=1 site missing')) +
-        scale_x_continuous(breaks = x_breaks, labels = x_labels, expand = c(0,0)) +
+        scale_x_continuous(breaks = x_breaks, labels = x_labels, expand = c(0,0), position = 'top') +
         scale_y_discrete(expand = c(0,0)) +
         labs(title = sprintf("%s PAV", formatC(roi)),
              subtitle = sprintf("%s %s: %s - %s",
@@ -301,7 +310,7 @@ plot_pav <- function(coord_map, presence_matrix, bin_info, na_matrix = NULL,
                                         digits = 0, big.mark = ","),
                                 formatC(region_end, format = "f",
                                         digits = 0, big.mark = ",")),
-             x = "Reference Coordinate Position",
+             x = "",
              y = "Sample",
              fill = 'Bin call status') +
         theme_minimal() +
@@ -311,16 +320,18 @@ plot_pav <- function(coord_map, presence_matrix, bin_info, na_matrix = NULL,
         coord_cartesian(xlim = range(df$expanded_start), ylim = c(1,n1+0.1)) +
         geom_hline(yintercept = rep(1:length(unique(df$Sample)), each = 2) - 0.5, linewidth = 0.25) +
         ## geom_vline(xintercept = filt_gene_bounds.poly$exp.x, linewidth = 0.5, color = gene_color) +
-        theme(axis.text.y = element_markdown(face = axis_faces, color = 'black'),
-              axis.text.x = element_text(angle = 45, hjust = 1, color = 'black'),
+        theme(axis.title.x.top = element_text(margin = margin(b = 0)),
+              axis.title.y = element_text(margin = margin(r = 15)),
+              axis.text.y = element_markdown(face = axis_faces, color = 'black'),
+              axis.text.x.top = element_text(angle = 45, hjust = 0, color = 'black', margin = margin(b = tick_lab_mar)),
               panel.grid.major = element_blank(),
               panel.grid.minor = element_blank(),
-              plot.title = element_markdown(hjust = 0.5, face = "bold"),
-              plot.subtitle = element_text(hjust = 0.5),
+              plot.title = element_markdown(hjust = 0.5, face = "bold", margin = margin(b = 10)),
+              plot.subtitle = element_text(hjust = 0.5, margin = margin(b = st_mar)),
               legend.position = "right",
-              legend.title = element_text(hjust = 0.5),
+              legend.title = element_text(hjust = 0.5, margin = margin(b = 20)),
               panel.border = element_rect(color = "black", fill = NA, linewidth = 0.75),
-              axis.ticks.x = element_line(color = 'black', linewidth = 0.25),
+              axis.ticks.x.top = element_line(color = 'black', linewidth = 0.25),
               text = element_text(color = 'black'))
     }
   } else{
@@ -329,7 +340,7 @@ plot_pav <- function(coord_map, presence_matrix, bin_info, na_matrix = NULL,
       scale_fill_gradient(low = color_low, high = color_high,
                           name = paste0("PAV:\n",bin.lab,' bins'),
                           limits = c(0, 1)) +
-      scale_x_continuous(breaks = x_breaks, labels = x_labels, expand = c(0,0)) +
+      scale_x_continuous(breaks = x_breaks, labels = x_labels, expand = c(0,0), position = 'top') +
       scale_y_discrete(expand = c(0,0)) +
       labs(title = sprintf("%s PAV", formatC(roi)),
            subtitle = sprintf("%s %s: %s - %s",
@@ -339,29 +350,29 @@ plot_pav <- function(coord_map, presence_matrix, bin_info, na_matrix = NULL,
                                       digits = 0, big.mark = ","),
                               formatC(region_end, format = "f",
                                       digits = 0, big.mark = ",")),
-           x = "Reference Coordinate Position",
+           x = "",
            y = "Sample") +
       theme_minimal() +
       geom_hline(yintercept = rep(1:length(unique(df$Sample)), each = 2) - 0.5, linewidth = 0.25) +
-      theme(axis.title.x = element_text(margin = margin(t = 15)),
+      theme(axis.title.x.top = element_text(margin = margin(b = 0)),
             axis.title.y = element_text(margin = margin(r = 15)),
             axis.text.y = element_markdown(face = axis_faces, color = 'black'),
-            axis.text.x = element_text(angle = 45, hjust = 1, color = 'black'),
+            axis.text.x.top = element_text(angle = 45, hjust = 0, color = 'black', margin = margin(b = tick_lab_mar)),
             panel.grid.major = element_blank(),
             panel.grid.minor = element_blank(),
-            plot.title = element_markdown(hjust = 0.5, face = "bold"),
-            plot.subtitle = element_text(hjust = 0.5),
+            plot.title = element_markdown(hjust = 0.5, face = "bold", margin = margin(b = 10)),
+            plot.subtitle = element_text(hjust = 0.5, margin = margin(b = st_mar)),
             legend.position = "right",
             legend.title = element_text(hjust = 0.5, margin = margin(b = 20)),
             panel.border = element_rect(color = "black", fill = NA, linewidth = 0.75),
-            axis.ticks.x = element_line(color = 'black', linewidth = 0.25),
+            axis.ticks.x.top = element_line(color = 'black', linewidth = 0.25),
             text = element_text(color = 'black'))
     if(exists('na.mat')){
       p.na <- ggplot(na.mat, aes(x = .data$expanded_start, y = .data$Sample, fill = factor(.data$Presence))) +
         geom_tile(color = NA) +
         scale_fill_manual(values = c('0' = 'grey95', '1' = 'grey30'),
                           labels = c('All present','>=1 site missing')) +
-        scale_x_continuous(breaks = x_breaks, labels = x_labels, expand = c(0,0)) +
+        scale_x_continuous(breaks = x_breaks, labels = x_labels, expand = c(0,0), position = 'top') +
         scale_y_discrete(expand = c(0,0)) +
         labs(title = sprintf("%s PAV", formatC(roi)),
              subtitle = sprintf("%s %s: %s - %s",
@@ -371,21 +382,23 @@ plot_pav <- function(coord_map, presence_matrix, bin_info, na_matrix = NULL,
                                         digits = 0, big.mark = ","),
                                 formatC(region_end, format = "f",
                                         digits = 0, big.mark = ",")),
-             x = "Reference Coordinate Position",
+             x = "",
              y = "Sample",
              fill = 'Bin call status') +
         theme_minimal() +
         geom_hline(yintercept = rep(1:length(unique(df$Sample)), each = 2) - 0.5, linewidth = 0.25) +
-        theme(axis.text.y = element_markdown(face = axis_faces, color = 'black'),
-              axis.text.x = element_text(angle = 45, hjust = 1, color = 'black'),
+        theme(axis.title.x.top = element_text(margin = margin(b = 0)),
+              axis.title.y = element_text(margin = margin(r = 15)),
+              axis.text.y = element_markdown(face = axis_faces, color = 'black'),
+              axis.text.x.top = element_text(angle = 45, hjust = 0, color = 'black', margin = margin(b = tick_lab_mar)),
               panel.grid.major = element_blank(),
               panel.grid.minor = element_blank(),
-              plot.title = element_markdown(hjust = 0.5, face = "bold"),
-              plot.subtitle = element_text(hjust = 0.5),
+              plot.title = element_markdown(hjust = 0.5, face = "bold", margin = margin(b = 10)),
+              plot.subtitle = element_text(hjust = 0.5, margin = margin(b = st_mar)),
               legend.position = "right",
-              legend.title = element_text(hjust = 0.5),
+              legend.title = element_text(hjust = 0.5, margin = margin(b = 20)),
               panel.border = element_rect(color = "black", fill = NA, linewidth = 0.75),
-              axis.ticks.x = element_line(color = 'black', linewidth = 0.25),
+              axis.ticks.x.top = element_line(color = 'black', linewidth = 0.25),
               text = element_text(color = 'black'))
     }
   }

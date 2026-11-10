@@ -10,7 +10,11 @@ import(ggplot2)
 import(ggtext)
 import(reshape2)
 import(vcfR)
-importFrom(stats,dist)
-importFrom(stats,hclust)
-importFrom(utils,setTxtProgressBar)
-importFrom(utils,txtProgressBar)
+importFrom(stats,
+  dist,
+  hclust
+)
+importFrom(utils,
+  setTxtProgressBar,
+  txtProgressBar
+)

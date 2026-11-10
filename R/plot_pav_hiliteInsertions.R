@@ -199,6 +199,15 @@ plot_pav_hiliteInsertions <- function(coord_map, presence_matrix, bin_info,
     bin.lab <- paste0(bin_size/1e6,'-Mb')
   }
 
+  ## reasonable title/label margins
+  if(nchar(region_end)< 5){
+    st_mar <- 10
+    tick_lab_mar <- -8
+  }else{
+    st_mar <- 30
+    tick_lab_mar <- -30
+  }
+
   ## If supplied, convert gene bounds into expanded coordinate space
   n1 <- length(unique(df$Sample))+1
   if(!is.null(gene_bounds)){
@@ -264,7 +273,7 @@ plot_pav_hiliteInsertions <- function(coord_map, presence_matrix, bin_info,
       scale_fill_continuous(name = paste0("Insertion PAV:\n",bin.lab,' bins'),
                             limits = c(0,1),
                             low = ins_color_low, high = ins_color_high) +
-      scale_x_continuous(breaks = x_breaks, labels = x_labels, expand = c(0,0)) +
+      scale_x_continuous(breaks = x_breaks, labels = x_labels, expand = c(0,0), position = 'top') +
       scale_y_discrete(expand = c(0,0)) +
       labs(title = sprintf("%s PAV", formatC(roi)),
            subtitle = sprintf("%s %s: %s - %s",
@@ -274,7 +283,7 @@ plot_pav_hiliteInsertions <- function(coord_map, presence_matrix, bin_info,
                                       digits = 0, big.mark = ","),
                               formatC(region_end, format = "f",
                                       digits = 0, big.mark = ",")),
-           x = "Reference Coordinate Position",
+           x = "",
            y = "Sample") +
       theme_minimal() +
       ## annotate("text", x = filt_gene_bounds$exp.midpt,
@@ -283,20 +292,20 @@ plot_pav_hiliteInsertions <- function(coord_map, presence_matrix, bin_info,
       coord_cartesian(xlim = range(df$expanded_start), ylim = c(1,n1+0.1)) +
       geom_hline(yintercept = rep(1:length(unique(df$Sample)), each = 2) - 0.5, linewidth = 0.25) +
       ## geom_vline(xintercept = filt_gene_bounds.poly$exp.x, linewidth = 0.5, color = gene_color) +
-      theme(axis.title.x = element_text(margin = margin(t = 15)),
+      theme(axis.title.x.top = element_text(margin = margin(b = 0)),
             axis.title.y = element_text(margin = margin(r = 15)),
             axis.text.y = element_markdown(face = axis_faces, color = 'black'),
-            axis.text.x = element_text(angle = 45, hjust = 1, color = 'black'),
+            axis.text.x.top = element_text(angle = 45, hjust = 0, color = 'black', margin = margin(b = tick_lab_mar)),
             panel.grid.major = element_blank(),
             panel.grid.minor = element_blank(),
-            plot.title = element_markdown(hjust = 0.5, face = "bold"),
-            plot.subtitle = element_text(hjust = 0.5),
+            plot.title = element_markdown(hjust = 0.5, face = "bold", margin = margin(b = 10)),
+            plot.subtitle = element_text(hjust = 0.5, margin = margin(b = st_mar)),
             legend.position = "right",
             legend.title = element_text(hjust = 0.5, margin = margin(b = 20)),
-            legend.spacing.y = unit(40, "pt"),
             panel.border = element_rect(color = "black", fill = NA, linewidth = 0.75),
-            axis.ticks.x = element_line(color = 'black', linewidth = 0.25),
-            text = element_text(color = 'black'))
+            axis.ticks.x.top = element_line(color = 'black', linewidth = 0.25),
+            text = element_text(color = 'black'),
+            legend.spacing.y = unit(40, "pt"))
   } else{
     ins_p <- ggplot(df, aes(x = .data$expanded_start, y = .data$Sample, fill = .data$Presence)) +
       geom_tile(data = df %>% filter(.data$seq.type == "ref"),
@@ -312,7 +321,7 @@ plot_pav_hiliteInsertions <- function(coord_map, presence_matrix, bin_info,
       scale_fill_continuous(name = paste0("Insertion PAV:\n",bin.lab,' bins'),
                             limits = c(0,1),
                             low = ins_color_low, high = ins_color_high) +
-      scale_x_continuous(breaks = x_breaks, labels = x_labels, expand = c(0,0)) +
+      scale_x_continuous(breaks = x_breaks, labels = x_labels, expand = c(0,0), position = 'top') +
       scale_y_discrete(expand = c(0,0)) +
       labs(title = sprintf("%s PAV", formatC(roi)),
            subtitle = sprintf("%s %s: %s - %s",
@@ -322,24 +331,24 @@ plot_pav_hiliteInsertions <- function(coord_map, presence_matrix, bin_info,
                                       digits = 0, big.mark = ","),
                               formatC(region_end, format = "f",
                                       digits = 0, big.mark = ",")),
-           x = "Reference Coordinate Position",
+           x = "",
            y = "Sample") +
       theme_minimal() +
       geom_hline(yintercept = rep(1:length(unique(df$Sample)), each = 2) - 0.5, linewidth = 0.25) +
-      theme(axis.title.x = element_text(margin = margin(t = 15)),
+      theme(axis.title.x.top = element_text(margin = margin(b = 0)),
             axis.title.y = element_text(margin = margin(r = 15)),
             axis.text.y = element_markdown(face = axis_faces, color = 'black'),
-            axis.text.x = element_text(angle = 45, hjust = 1, color = 'black'),
+            axis.text.x.top = element_text(angle = 45, hjust = 0, color = 'black', margin = margin(b = tick_lab_mar)),
             panel.grid.major = element_blank(),
             panel.grid.minor = element_blank(),
-            plot.title = element_markdown(hjust = 0.5, face = "bold"),
-            plot.subtitle = element_text(hjust = 0.5),
+            plot.title = element_markdown(hjust = 0.5, face = "bold", margin = margin(b = 10)),
+            plot.subtitle = element_text(hjust = 0.5, margin = margin(b = st_mar)),
             legend.position = "right",
             legend.title = element_text(hjust = 0.5, margin = margin(b = 20)),
-            legend.spacing.y = unit(40, "pt"),
             panel.border = element_rect(color = "black", fill = NA, linewidth = 0.75),
-            axis.ticks.x = element_line(color = 'black', linewidth = 0.25),
-            text = element_text(color = 'black'))
+            axis.ticks.x.top = element_line(color = 'black', linewidth = 0.25),
+            text = element_text(color = 'black'),
+            legend.spacing.y = unit(40, "pt"))
   }
   if(output_fmt %in% c('pdf', 'both')){
     ggsave(paste0(output_prefix,'.pdf'), ins_p, device = 'pdf',
