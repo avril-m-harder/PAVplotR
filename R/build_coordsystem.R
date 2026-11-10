@@ -12,9 +12,10 @@
 #' @param roi Name of region to be plotted; required if store_int = TRUE
 #' @return A data frame with mapping between reference and expanded coordinates
 #' @import vcfR
+#' @importFrom utils read.table write.table
 #' @export
-build_coordsystem <- function(vcf, start_pos = NULL, end_pos = NULL, var_handling = 'collapsed', store_int = FALSE,
-                              roi = NULL, region_start = NULL, region_end = NULL, bin_size = NULL) {
+build_coordsystem <- function(vcf, start_pos = NULL, end_pos = NULL, var_handling = 'collapsed',
+                              store_int = FALSE, roi = NULL) {
 
   if(missing(vcf)){
     stop("Must specify 'vcf': a vcfR object")
@@ -33,13 +34,12 @@ build_coordsystem <- function(vcf, start_pos = NULL, end_pos = NULL, var_handlin
       stop("If writing tmp coordinate map file, must specify roi (ROI name)")
     }
     out_tmp_fn <- paste0('tmp_PAVplotR/',roi,'.',start_pos,'.',end_pos,'.txt')
-  }
-
-  ## Check if coord map has already been calculated and read in if so
-  if(file.exists(out_tmp_fn)){
-    message("Coordinate map found. Reading...")
-    coord_map <- read.table(out_tmp_fn)
-    return(coord_map)
+    ## Check if coord map has already been calculated and read in if so
+    if(file.exists(out_tmp_fn)){
+      message(paste0(roi," coordinate map found. Reading..."))
+      coord_map <- read.table(out_tmp_fn, header = TRUE)
+      return(coord_map)
+    }
   }
 
   ## Extract positions and alleles

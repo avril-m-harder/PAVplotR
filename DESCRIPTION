@@ -6,7 +6,7 @@ Author: Avril M. Harder
 Maintainer: Avril M. Harder <aharder@hudsonalpha.org>
 Description: Takes a haploid VCF and plots sequence PAV in the extended coordinate space of a reference haplotype.
 Encoding: UTF-8
-License: GPL-2
+License: BSD_3_clause + file LICENSE
 LazyData: true
 Imports: 
     dplyr,

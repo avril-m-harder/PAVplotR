@@ -5,11 +5,40 @@
 #' @param bin_size Size of bins in expanded coordinates
 #' @param start_pos Start position in reference coordinates
 #' @param end_pos End position in reference coordinates
+#' @param store_int Write presence matrix and bin information to a file in ./tmp_PAVplotR/ for retrieval after calculating (default = FALSE)
+#' @param roi Name of region to be plotted; required if store_int = TRUE
 #' @return A list with presence matrix and bin information
 #' @import vcfR
-#' @importFrom utils setTxtProgressBar txtProgressBar
+#' @importFrom utils setTxtProgressBar txtProgressBar read.table write.table
 #' @export
-calculate_bins <- function(vcf, coord_map, bin_size, start_pos, end_pos){
+calculate_bins <- function(vcf, coord_map, bin_size, start_pos, end_pos, store_int = FALSE,
+                           roi = NULL){
+
+  ## Create /tmp/ for storing key if doesn't exist
+  if(isTRUE(store_int)){
+    dir.create('./tmp_PAVplotR/', showWarnings = FALSE)
+    if(isTRUE(store_int) && (is.null(roi))) {
+      stop("If writing tmp bin files, must specify roi (ROI name)")
+    }
+    tmp_presence_matrix_fn <- paste0('tmp_PAVplotR/',roi,'.',start_pos,'.',end_pos,'.',bin_size,'-pa_matrix.txt')
+    tmp_bin_info_fn <- paste0('tmp_PAVplotR/',roi,'.',start_pos,'.',end_pos,'.',bin_size,'-binfo.txt')
+    tmp_any_missing_fn <- paste0('tmp_PAVplotR/',roi,'.',start_pos,'.',end_pos,'.',bin_size,'-missing.txt')
+
+    ## Check if coord map has already been calculated and read in if so
+    if(file.exists(tmp_presence_matrix_fn) &
+       file.exists(tmp_bin_info_fn) &
+       file.exists(tmp_any_missing_fn)){
+      message("Bin information found. Reading...")
+      presence_matrix <- read.table(tmp_presence_matrix_fn, header = TRUE)
+      bin_info <- read.table(tmp_bin_info_fn, header = TRUE)
+      missing_matrix <- read.table(tmp_any_missing_fn, header = TRUE)
+      return(list(
+        matrix = as.matrix(presence_matrix),
+        bin_info = as.data.frame(bin_info),
+        any_missing = as.matrix(missing_matrix)
+      ))
+    }
+  }
 
   ## Get genotype data, make sure IDs are unique
   if(any(duplicated(vcf@fix[,'ID']))){
@@ -232,6 +261,15 @@ calculate_bins <- function(vcf, coord_map, bin_size, start_pos, end_pos){
     ref_end = bin_ref_ends,
     ref_midpoint = (bin_ref_starts + bin_ref_ends) / 2
   )
+
+  if(isTRUE(store_int)){
+    write.table(presence_matrix, tmp_presence_matrix_fn,
+                quote = FALSE, row.names = TRUE, sep = '\t')
+    write.table(bin_info, tmp_bin_info_fn,
+                quote = FALSE, row.names = TRUE, sep = '\t')
+    write.table(missing_matrix, tmp_any_missing_fn,
+                quote = FALSE, row.names = TRUE, sep = '\t')
+  }
 
   return(list(
     matrix = presence_matrix,

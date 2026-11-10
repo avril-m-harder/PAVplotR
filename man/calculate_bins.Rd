@@ -4,7 +4,15 @@
 \alias{calculate_bins}
 \title{Calculate presence/absence for each sample in bins}
 \usage{
-calculate_bins(vcf, coord_map, bin_size, start_pos, end_pos)
+calculate_bins(
+  vcf,
+  coord_map,
+  bin_size,
+  start_pos,
+  end_pos,
+  store_int = FALSE,
+  roi = NULL
+)
 }
 \arguments{
 \item{vcf}{A vcfR object}
@@ -16,6 +24,10 @@ calculate_bins(vcf, coord_map, bin_size, start_pos, end_pos)
 \item{start_pos}{Start position in reference coordinates}
 
 \item{end_pos}{End position in reference coordinates}
+
+\item{store_int}{Write presence matrix and bin information to a file in ./tmp_PAVplotR/ for retrieval after calculating (default = FALSE)}
+
+\item{roi}{Name of region to be plotted; required if store_int = TRUE}
 }
 \value{
 A list with presence matrix and bin information

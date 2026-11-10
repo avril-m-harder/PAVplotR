@@ -10,10 +10,7 @@ build_coordsystem(
   end_pos = NULL,
   var_handling = "collapsed",
   store_int = FALSE,
-  roi = NULL,
-  region_start = NULL,
-  region_end = NULL,
-  bin_size = NULL
+  roi = NULL
 )
 }
 \arguments{
